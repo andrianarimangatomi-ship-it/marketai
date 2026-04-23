@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card-futuristic p-4">
+    <h2>{{ legend }}</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">{{ form.title.label }} {{ form.title(class="form-control", id="title") }}</div>
+        <div class="mb-3">{{ form.description.label }} {{ form.description(class="form-control", rows=5, id="description") }}</div>
+        <div class="mb-3">{{ form.price.label }} {{ form.price(class="form-control") }}</div>
+        <div class="mb-3">{{ form.category.label }} {{ form.category(class="form-select") }}</div>
+        <div class="mb-3">{{ form.image.label }} {{ form.image(class="form-control") }}</div>
+        
+        <!-- Champ Tags avec bouton de génération IA -->
+        <div class="mb-3">
+            {{ form.tags.label }}
+            <div class="d-flex gap-2">
+                {{ form.tags(class="form-control", id="tags") }}
+                <button type="button" id="generateTagsBtn" class="btn btn-neon">🤖 Générer tags</button>
+            </div>
+        </div>
+        
+        {{ form.submit(class="btn btn-glow") }}
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+
+<script>
+    document.getElementById('generateTagsBtn')?.addEventListener('click', async () => {
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('description').value;
+        if (!title && !description) {
+            alert('Veuillez saisir un titre et une description.');
+            return;
+        }
+        const btn = document.getElementById('generateTagsBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Génération...';
+        try {
+            const response = await fetch('/admin/generate_tags', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+            const data = await response.json();
+            if (data.tags && data.tags.length) {
+                const tagsField = document.getElementById('tags');
+                const existing = tagsField.value;
+                const newTags = data.tags.join(', ');
+                tagsField.value = existing ? existing + ', ' + newTags : newTags;
+            } else {
+                alert('Aucun tag généré.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erreur lors de la génération.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🤖 Générer tags';
+        }
+    });
+</script>
+{% endblock %}

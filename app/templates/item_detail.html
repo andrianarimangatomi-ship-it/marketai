@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card-futuristic p-4">
+    <div class="row">
+        <div class="col-md-6">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" class="img-fluid rounded">
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h1>{{ item.title }}</h1>
+            <p class="text-info h3">{{ item.price }} Ar</p>
+            <p><strong>Catégorie :</strong> {{ item.category }}</p>
+            <p>{{ item.description }}</p>
+            
+            <!-- Affichage des tags (optionnel) -->
+            {% if item.tags %}
+            <p><strong>Tags :</strong> {{ item.tags }}</p>
+            {% endif %}
+            
+            <a href="#" class="btn btn-glow">Contacter le vendeur</a>
+        </div>
+    </div>
+</div>
+
+<!-- Section articles similaires -->
+{% if similaires %}
+<hr class="my-5" style="border-color: var(--vert);">
+<h2 class="mb-4"><i class="fas fa-chart-line"></i> Articles similaires</h2>
+<div class="row">
+    {% for sim_item, score in similaires %}
+    <div class="col-md-3 mb-4">
+        <div class="card-futuristic h-100 p-3">
+            {% if sim_item.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + sim_item.image_filename) }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover;">
+            {% elif sim_item.image_url %}
+                <img src="{{ sim_item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover;">
+            {% else %}
+                <div class="bg-secondary text-center py-3 mb-3">Image</div>
+            {% endif %}
+            <h5>{{ sim_item.title }}</h5>
+            <p class="text-info">{{ sim_item.price }} Ar</p>
+            <a href="{{ url_for('main.track_click', item_id=sim_item.id) }}" class="btn btn-sm btn-neon">Voir</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

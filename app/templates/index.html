@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+body {
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+    font-family: 'Courier New', monospace !important;
+}
+.card-futuristic {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid #00ccff !important;
+}
+</style>
+<div class="text-center mb-5">
+    <h1 class="display-3 floating-glow">MarketAI</h1>
+    <p class="lead">Trouvez l'article parfait que vous avez besoin</p>
+</div>
+
+<div class="row justify-content-center mb-5">
+    <div class="col-md-8">
+        <form action="{{ url_for('main.search') }}" method="get" class="d-flex gap-2">
+            <input type="text" name="q" class="form-control form-control-lg" placeholder="Rechercher un article..." value="{{ query or '' }}">
+            <select name="category" class="form-select form-select-lg w-auto">
+                <option value="tous">Toutes catégories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat|capitalize }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-glow btn-lg"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
+</div>
+
+
+{% if results is defined %}
+    <h2 class="mb-4">Résultats pour "{{ query or selected_category }}"</h2>
+    {% if results %}
+        <div class="row">
+            {% for item in results %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card-futuristic h-100 p-3">
+                    {% if item.image_url %}
+                        <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 150px; object-fit: cover; border-radius: 12px;">
+                    {% else %}
+                        <div class="bg-secondary text-center py-5 mb-3" style="border-radius: 12px;">Image</div>
+                    {% endif %}
+                    <h5>{{ item.title }}</h5>
+                    <p class="text-info">{{ item.price }} Ar</p>
+                    <p class="small">{{ item.description[:80] }}...</p>
+                    <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-neon w-100 track-click" data-id="{{ item.id }}">Voir détail</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if pagination and pagination.pages > 1 %}
+        <nav aria-label="Pagination résultats">
+            <ul class="pagination justify-content-center mt-4">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.prev_num }}">Précédent</a>
+                </li>
+                {% for p in range(1, pagination.pages + 1) %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}"><a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ p }}">{{ p }}</a></li>
+                {% endfor %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.next_num }}">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning">Aucun résultat trouvé.</div>
+    {% endif %}
+{% endif %}
+
+{% if recommendations %}
+    <hr class="my-5" style="border-color: #0ff;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fas fa-robot"></i> Recommandations</h2>
+        {% if ai_insights.exploration_rate is defined %}
+            <!-- <span class="badge bg-info">Exploration {{ "%.0f"|format(ai_insights.exploration_rate * 100) }}%</span> -->
+        {% endif %}
+    </div>
+    <p class="text-muted mb-4">{{ ai_insights.reason }}</p>
+    <div class="row">
+        {% for item in recommendations %}
+        <div class="col-md-3 mb-4">
+            <div class="card-futuristic h-100 p-3">
+                {% if item.image_url %}
+                    <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-secondary text-center py-3 mb-3">Image</div>
+                {% endif %}
+                <h6>{{ item.title }}</h6>
+                <p class="text-info">{{ item.price }} Ar</p>
+                <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Découvrir</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if trending_items %}
+        <hr class="my-5" style="border-color: #0ff;">
+        <h2 class="mb-4"><i class="fas fa-fire"></i> Tendances </h2>
+        <div class="row">
+            {% for item in trending_items %}
+            <div class="col-md-3 mb-4">
+                <div class="card-futuristic h-100 p-3 border border-warning">
+                    {% if item.image_url %}
+                        <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-secondary text-center py-3 mb-3">Image</div>
+                    {% endif %}
+                    <h6>{{ item.title }}</h6>
+                    <!-- <p class="text-info">Score IA {{ "%.2f"|format(item.reinforcement_score()) }}</p> -->
+                    <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Découvrir</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% elif not results %}
+    {% if trending_items %}
+        <h2 class="mb-4"><i class="fas fa-fire"></i> Articles populaires</h2>
+        <div class="row">
+            {% for item in trending_items %}
+            <div class="col-md-3 mb-4">
+                <div class="card-futuristic h-100 p-3 border border-warning">
+                    {% if item.image_url %}
+                        <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover; border-radius: 12px;">
+                    {% else %}
+                        <div class="bg-secondary text-center py-3 mb-3" style="border-radius: 12px;">Image</div>
+                    {% endif %}
+                    <h6>{{ item.title }}</h6>
+                    <p class="text-info">{{ item.price }} Ar</p>
+                    <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Voir détail</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <hr class="my-5" style="border-color: #0ff;">
+    {% endif %}
+    <h2 class="mb-4">Articles récents</h2>
+    <div class="row">
+        {% for item in featured %}
+        <div class="col-md-4 mb-4">
+            <div class="card-futuristic h-100 p-3 border border-secondary">
+                {% if item.image_url %}
+                    <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover; border-radius: 12px;">
+                {% else %}
+                    <div class="bg-secondary text-center py-3 mb-3" style="border-radius: 12px;">Image</div>
+                {% endif %}
+                <h5>{{ item.title }}</h5>
+                <p class="text-info">{{ item.price }} Ar</p>
+                <p>{{ item.description[:100] }}...</p>
+                <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-neon track-click" data-id="{{ item.id }}">Voir</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

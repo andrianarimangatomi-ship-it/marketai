@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: marketai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        value: admin123
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketai-db
+          property: connectionString
+
+  - type: postgresql
+    name: marketai-db
+    plan: free

@@ -1,7 +1,8 @@
 import random
 from collections import Counter
 from app.models import Item
-from app import db
+from app.extensions import db
+
 
 DEFAULT_CATEGORIES = ['voitures', 'motos', 'guitares', 'vêtements', 'autres']
 

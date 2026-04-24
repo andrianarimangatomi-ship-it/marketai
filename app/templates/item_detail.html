@@ -18,7 +18,15 @@
             <p><strong>Tags :</strong> {{ item.tags }}</p>
             {% endif %}
             
-            <a href="#" class="btn btn-glow">Contacter le vendeur</a>
+            <!-- Boutons action -->
+            <div class="d-flex gap-3 mt-4">
+                <button id="add-to-cart-detail" class="btn btn-glow" data-id="{{ item.id }}">
+                    <i class="fas fa-cart-plus"></i> Ajouter au panier
+                </button>
+                <button id="like-detail" class="btn btn-neon" data-id="{{ item.id }}">
+                    ❤️ J’aime (<span id="like-count">{{ item.likes if item.likes is defined else 0 }}</span>)
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -46,4 +54,43 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<script>
+    // Ajout au panier depuis la page détail
+    document.getElementById('add-to-cart-detail').addEventListener('click', function(e) {
+        const itemId = this.dataset.id;
+        fetch('/add-to-cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: itemId, quantity: 1 })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Article ajouté au panier !');
+                // Optionnel : mettre à jour le compteur du panier dans la navbar
+                location.reload(); // ou update dynamiquement
+            } else {
+                alert('Erreur lors de l\'ajout au panier.');
+            }
+        })
+        .catch(err => console.error('Erreur panier:', err));
+    });
+
+    // Like / Unlike (AJAX)
+    document.getElementById('like-detail').addEventListener('click', function(e) {
+        const itemId = this.dataset.id;
+        fetch(`/like/${itemId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.likes !== undefined) {
+                document.getElementById('like-count').innerText = data.likes;
+            }
+        })
+        .catch(err => console.error('Erreur like:', err));
+    });
+</script>
 {% endblock %}

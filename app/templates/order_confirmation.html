@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4>Merci pour votre commande ! 🎉</h4>
+        <p>Votre commande n°{{ order.id }} a été enregistrée avec succès (paiement simulé).</p>
+    </div>
+    <div class="card">
+        <div class="card-header">Détail de la commande</div>
+        <div class="card-body">
+            <p><strong>Client :</strong> {{ order.customer_name }}</p>
+            <p><strong>Email :</strong> {{ order.customer_email }}</p>
+            <p><strong>Téléphone :</strong> {{ order.customer_phone }}</p>
+            <p><strong>Adresse :</strong> {{ order.shipping_address }}</p>
+            <h5>Articles :</h5>
+            <ul>
+                {% for item in order.items %}
+                <li>{{ item.item.title }} x {{ item.quantity }} = {{ item.price_at_time * item.quantity }} Ar</li>
+                {% endfor %}
+            </ul>
+            <h4>Total : {{ order.total_price }} Ar</h4>
+            <p>Statut : <span class="badge bg-success">{{ order.status }}</span></p>
+        </div>
+    </div>
+    <a href="{{ url_for('main.index') }}" class="btn btn-neon mt-3">Retour à l'accueil</a>
+</div>
+{% endblock %}

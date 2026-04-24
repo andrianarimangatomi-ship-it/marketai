@@ -21,6 +21,17 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">Accueil</a></li>
+                    <!-- Nouveau lien vers le panier avec compteur -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.view_cart') }}">
+                            <i class="fas fa-shopping-cart"></i> Panier
+                            {% if session.cart %}
+                            <span class="badge bg-info text-dark">{{ session.cart.values()|sum }}</span>
+                            {% else %}
+                            <span class="badge bg-info text-dark">0</span>
+                            {% endif %}
+                        </a>
+                    </li>
                     {% if session.admin_logged_in %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Admin</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.admin_logout') }}">Déconnexion admin</a></li>

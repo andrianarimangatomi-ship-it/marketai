@@ -30,6 +30,9 @@ def create_app():
     from app.extensions import db
     db.init_app(app)
 
+    from app import cli
+    cli.init_app(app)
+
     from app.routes import main, admin
     app.register_blueprint(main)
     app.register_blueprint(admin)

@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash, abort, current_app
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, abort, current_app, jsonify
 from app.extensions import db
-from app.models import Item
+from app.models import Item, Order, OrderItem
 from app.forms import ItemForm, AdminLoginForm
 from app.ia import get_recommendations, update_click_metrics, update_view_metrics, get_ai_insights, get_trending_items, get_global_metrics
 from app.similarite import get_similar_items, refresh_similarity
@@ -66,6 +66,202 @@ def track_click(item_id):
     item = Item.query.get_or_404(item_id)
     similaires = get_similar_items(item_id, limit=4)
     return render_template('item_detail.html', item=item, similaires=similaires)
+
+# ---------- Cart Routes ----------
+@main.route('/cart')
+def view_cart():
+    cart = session.get('cart', {})
+    cart_items = []
+    total = 0
+
+    for item_id, quantity in cart.items():
+        item = Item.query.get(int(item_id))
+        if item:
+            subtotal = item.price * quantity
+            total += subtotal
+            cart_items.append({
+                'item': item,
+                'quantity': quantity,
+                'subtotal': subtotal
+            })
+
+    return render_template('cart.html', cart_items=cart_items, total=total)
+
+@main.route('/add-to-cart/<int:item_id>', methods=['POST'])
+def add_to_cart(item_id):
+    item = Item.query.get_or_404(item_id)
+    quantity = request.form.get('quantity', 1, type=int)
+
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    item_id_str = str(item_id)
+    if item_id_str in session['cart']:
+        session['cart'][item_id_str] += quantity
+    else:
+        session['cart'][item_id_str] = quantity
+
+    session.modified = True
+    flash(f'{item.title} ajouté au panier', 'success')
+    return redirect(request.referrer or url_for('main.index'))
+
+@main.route('/add-bulk-to-cart', methods=['POST'])
+def add_bulk_to_cart():
+    """Add multiple selected items to cart"""
+    item_ids = request.form.getlist('item_ids')
+
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    for item_id in item_ids:
+        item_id_str = str(item_id)
+        if item_id_str in session['cart']:
+            session['cart'][item_id_str] += 1
+        else:
+            session['cart'][item_id_str] = 1
+
+    session.modified = True
+    flash(f'{len(item_ids)} article(s) ajouté(s) au panier', 'success')
+    return redirect(request.referrer or url_for('main.index'))
+
+@main.route('/cart/update', methods=['POST'])
+def update_cart():
+    data = request.get_json()
+    item_id = str(data.get('item_id'))
+    quantity = int(data.get('quantity', 1))
+
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    if quantity <= 0:
+        session['cart'].pop(item_id, None)
+    else:
+        session['cart'][item_id] = quantity
+
+    session.modified = True
+    return jsonify({'success': True})
+
+@main.route('/cart/remove', methods=['POST'])
+def remove_from_cart():
+    data = request.get_json()
+    item_ids = data.get('item_ids', [])
+
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    for item_id in item_ids:
+        session['cart'].pop(str(item_id), None)
+
+    session.modified = True
+    return jsonify({'success': True})
+
+@main.route('/cart/clear', methods=['POST'])
+def clear_cart():
+    session.pop('cart', None)
+    session.modified = True
+    flash('Panier vidé', 'info')
+    return redirect(url_for('main.view_cart'))
+
+# ---------- Checkout & Order Routes ----------
+@main.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    cart = session.get('cart', {})
+
+    if not cart:
+        flash('Votre panier est vide', 'warning')
+        return redirect(url_for('main.view_cart'))
+
+    if request.method == 'POST':
+        customer_name = request.form.get('customer_name')
+        customer_email = request.form.get('customer_email')
+        customer_phone = request.form.get('customer_phone')
+        shipping_address = request.form.get('shipping_address')
+
+        # Calculate total
+        total = 0
+        order_items_data = []
+
+        for item_id, quantity in cart.items():
+            item = Item.query.get(int(item_id))
+            if item:
+                subtotal = item.price * quantity
+                total += subtotal
+                order_items_data.append({
+                    'item': item,
+                    'quantity': quantity,
+                    'price_at_time': item.price
+                })
+
+        # Create order
+        order = Order(
+            customer_name=customer_name,
+            customer_email=customer_email,
+            customer_phone=customer_phone,
+            shipping_address=shipping_address,
+            total_price=total,
+            status='paid',
+            session_id=request.cookies.get('session', '')
+        )
+
+        db.session.add(order)
+        db.session.flush()  # Get order.id without committing
+
+        # Add order items
+        for data in order_items_data:
+            order_item = OrderItem(
+                order_id=order.id,
+                item_id=data['item'].id,
+                quantity=data['quantity'],
+                price_at_time=data['price_at_time']
+            )
+            db.session.add(order_item)
+
+        db.session.commit()
+
+        # Clear cart
+        session.pop('cart', None)
+        session.modified = True
+
+        flash('Commande créée avec succès!', 'success')
+        return redirect(url_for('main.order_confirmation', order_id=order.id))
+
+    # GET request - show checkout form
+    cart_items = []
+    total = 0
+
+    for item_id, quantity in cart.items():
+        item = Item.query.get(int(item_id))
+        if item:
+            subtotal = item.price * quantity
+            total += subtotal
+            cart_items.append({
+                'item': item,
+                'quantity': quantity,
+                'subtotal': subtotal
+            })
+
+    return render_template('checkout.html', cart_items=cart_items, total=total)
+
+@main.route('/order/<int:order_id>')
+def order_confirmation(order_id):
+    order = Order.query.get_or_404(order_id)
+    return render_template('order_confirmation.html', order=order)
+
+# ---------- Like/Unlike Routes ----------
+@main.route('/like/<int:item_id>', methods=['POST'])
+def like_item(item_id):
+    item = Item.query.get_or_404(item_id)
+    item.likes += 1
+    db.session.commit()
+    return jsonify({'success': True, 'likes': item.likes})
+
+@main.route('/unlike/<int:item_id>', methods=['POST'])
+def unlike_item(item_id):
+    item = Item.query.get_or_404(item_id)
+    if item.likes > 0:
+        item.likes -= 1
+    db.session.commit()
+    return jsonify({'success': True, 'likes': item.likes})
 
 # ---------- Admin ----------
 @admin.route('/admin/login', methods=['GET', 'POST'])
@@ -186,3 +382,44 @@ def generate_tags():
     description = data.get('description', '')
     tags = generate_tags_for_item(title, description, top_n=5)
     return {'tags': tags}
+
+# ---------- Admin Orders ----------
+@admin.route('/admin/orders')
+@admin_required
+def admin_orders():
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', '')
+
+    query = Order.query
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+
+    pagination = query.order_by(Order.created_at.desc()).paginate(page=page, per_page=10, error_out=False)
+    orders = pagination.items
+
+    # Top liked items
+    top_liked = Item.query.order_by(Item.likes.desc()).limit(10).all()
+
+    return render_template('admin_orders.html', orders=orders, pagination=pagination, status_filter=status_filter, top_liked=top_liked)
+
+@admin.route('/admin/order/<int:order_id>/status', methods=['POST'])
+@admin_required
+def update_order_status(order_id):
+    order = Order.query.get_or_404(order_id)
+    new_status = request.form.get('status')
+
+    if new_status in ['paid', 'shipped', 'cancelled']:
+        order.status = new_status
+        db.session.commit()
+        flash(f'Statut de la commande mis à jour: {new_status}', 'success')
+
+    return redirect(url_for('admin.admin_orders'))
+
+@admin.route('/admin/order/<int:order_id>/cancel', methods=['POST'])
+@admin_required
+def cancel_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    order.status = 'cancelled'
+    db.session.commit()
+    flash('Commande annulée', 'success')
+    return redirect(url_for('admin.admin_orders'))

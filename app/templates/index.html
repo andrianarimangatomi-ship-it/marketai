@@ -63,7 +63,8 @@ body {
                     <p class="text-info">{{ item.price }} Ar</p>
                     <p class="small">{{ item.description[:80] }}...</p>
                     <div class="d-flex justify-content-between align-items-center mt-2">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-neon w-50 track-click" data-id="{{ item.id }}">Voir détail</a>
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-neon w-40 track-click" data-id="{{ item.id }}">Voir détail</a>
+                        <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
                         <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
                             ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
                         </button>
@@ -112,6 +113,7 @@ body {
                 <p class="text-info">{{ item.price }} Ar</p>
                 <div class="d-flex justify-content-between">
                     <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Découvrir</a>
+                    <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
                     <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
                         ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
                     </button>
@@ -136,6 +138,7 @@ body {
                     <h6>{{ item.title }}</h6>
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Découvrir</a>
+                        <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
                         <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
                             ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
                         </button>
@@ -162,6 +165,7 @@ body {
                     <p class="text-info">{{ item.price }} Ar</p>
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Voir détail</a>
+                        <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
                         <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
                             ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
                         </button>
@@ -188,6 +192,7 @@ body {
                 <p>{{ item.description[:100] }}...</p>
                 <div class="d-flex justify-content-between">
                     <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-neon track-click" data-id="{{ item.id }}">Voir</a>
+                    <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
                     <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
                         ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
                     </button>
@@ -218,6 +223,21 @@ body {
         });
     });
 
+    // Ajout individuel au panier
+    document.querySelectorAll('.btn-add-cart').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = this.dataset.id;
+            fetch(`/add-to-cart/${itemId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'quantity=1'
+            })
+            .then(() => location.reload())
+            .catch(err => console.error('Erreur ajout panier:', err));
+        });
+    });
+
     // Ajout groupé au panier
     document.getElementById('bulk-add-cart').addEventListener('click', function() {
         const selected = Array.from(document.querySelectorAll('.bulk-checkbox:checked')).map(cb => cb.value);
@@ -234,10 +254,8 @@ body {
         .then(data => {
             if (data.success) {
                 alert(`${selected.length} article(s) ajouté(s) au panier.`);
-                // Optionnel : décocher les cases
                 document.querySelectorAll('.bulk-checkbox:checked').forEach(cb => cb.checked = false);
-                // Mettre à jour le compteur du panier dans la navbar (si nécessaire)
-                location.reload(); // simple rechargement pour mettre à jour le badge
+                location.reload();
             } else {
                 alert('Erreur lors de l\'ajout au panier.');
             }

@@ -4,10 +4,6 @@ import os
 
 load_dotenv()
 
-# ✅ SUPPRIMER ces deux lignes :
-# from flask_sqlalchemy import SQLAlchemy  ← SUPPRIMER
-# db = SQLAlchemy()                        ← SUPPRIMER
-
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key')
@@ -26,12 +22,8 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = upload_folder
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-    # ✅ Importer depuis extensions.py — instance unique
     from app.extensions import db
     db.init_app(app)
-
-    from app import cli
-    cli.init_app(app)
 
     from app.routes import main, admin
     app.register_blueprint(main)

@@ -12,26 +12,23 @@
             <p class="text-info h3">{{ item.price }} Ar</p>
             <p><strong>Catégorie :</strong> {{ item.category }}</p>
             <p>{{ item.description }}</p>
-            
-            <!-- Affichage des tags (optionnel) -->
             {% if item.tags %}
             <p><strong>Tags :</strong> {{ item.tags }}</p>
             {% endif %}
-            
-            <!-- Boutons action -->
+
             <div class="d-flex gap-3 mt-4">
                 <button id="add-to-cart-detail" class="btn btn-glow" data-id="{{ item.id }}">
                     <i class="fas fa-cart-plus"></i> Ajouter au panier
                 </button>
-                <button id="like-detail" class="btn btn-neon" data-id="{{ item.id }}">
-                    ❤️ J’aime (<span id="like-count">{{ item.likes if item.likes is defined else 0 }}</span>)
-                </button>
+                <a href="{{ url_for('main.checkout') }}?item_id={{ item.id }}" class="btn btn-neon">
+                    <i class="fas fa-credit-card"></i> Acheter maintenant
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Section articles similaires -->
+<!-- Articles similaires -->
 {% if similaires %}
 <hr class="my-5" style="border-color: var(--vert);">
 <h2 class="mb-4"><i class="fas fa-chart-line"></i> Articles similaires</h2>
@@ -55,42 +52,34 @@
 </div>
 {% endif %}
 
+<!-- Top articles aimés -->
+{% if top_liked %}
+<hr class="my-5" style="border-color: var(--vert);">
+<h2 class="mb-4"><i class="fas fa-heart"></i> Articles les plus aimés</h2>
+<div class="row">
+    {% for liked_item in top_liked %}
+    <div class="col-md-2 col-sm-4 mb-3">
+        <div class="card-futuristic p-2 text-center">
+            <img src="{{ liked_item.image_url or 'https://via.placeholder.com/100' }}" style="height: 80px; object-fit: cover;" class="mb-2 rounded">
+            <h6>{{ liked_item.title|truncate(20) }}</h6>
+            <p class="small">{{ liked_item.likes }} ❤️</p>
+            <a href="{{ url_for('main.track_click', item_id=liked_item.id) }}" class="btn btn-sm btn-neon">Voir</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <script>
-    // Ajout au panier depuis la page détail
     document.getElementById('add-to-cart-detail').addEventListener('click', function(e) {
         const itemId = this.dataset.id;
-        fetch('/add-to-cart', {
+        fetch(`/add-to-cart/${itemId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ item_id: itemId, quantity: 1 })
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'quantity=1'
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert('Article ajouté au panier !');
-                // Optionnel : mettre à jour le compteur du panier dans la navbar
-                location.reload(); // ou update dynamiquement
-            } else {
-                alert('Erreur lors de l\'ajout au panier.');
-            }
-        })
+        .then(() => location.reload())
         .catch(err => console.error('Erreur panier:', err));
-    });
-
-    // Like / Unlike (AJAX)
-    document.getElementById('like-detail').addEventListener('click', function(e) {
-        const itemId = this.dataset.id;
-        fetch(`/like/${itemId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.likes !== undefined) {
-                document.getElementById('like-count').innerText = data.likes;
-            }
-        })
-        .catch(err => console.error('Erreur like:', err));
     });
 </script>
 {% endblock %}

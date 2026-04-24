@@ -19,5 +19,6 @@ WTForms==3.0.1
 scikit-learn==1.5.2
 gunicorn==21.2.0
 psycopg2-binary==2.9.9
+nltk==3.8.1
 
 

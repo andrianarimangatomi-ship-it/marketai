@@ -93,7 +93,6 @@ def add_to_cart(item_id):
     session.modified = True
     flash(f'{item.title} ajouté au panier', 'success')
     return redirect(request.referrer or url_for('main.index'))
-
 @main.route('/add-bulk-to-cart', methods=['POST'])
 def add_bulk_to_cart():
     data = request.get_json()
@@ -102,27 +101,14 @@ def add_bulk_to_cart():
     item_ids = data.get('item_ids', [])
     if not item_ids:
         return jsonify({'success': False, 'error': 'No items selected'}), 400
+
     if 'cart' not in session:
         session['cart'] = {}
     for item_id in item_ids:
-        item_id_str = str(item_id)
-        session['cart'][item_id_str] = session['cart'].get(item_id_str, 0) + 1
+        id_str = str(item_id)
+        session['cart'][id_str] = session['cart'].get(id_str, 0) + 1
     session.modified = True
     return jsonify({'success': True, 'count': len(item_ids)})
-
-@main.route('/cart/update', methods=['POST'])
-def update_cart():
-    data = request.get_json()
-    item_id = str(data.get('item_id'))
-    quantity = int(data.get('quantity', 1))
-    if 'cart' not in session:
-        session['cart'] = {}
-    if quantity <= 0:
-        session['cart'].pop(item_id, None)
-    else:
-        session['cart'][item_id] = quantity
-    session.modified = True
-    return jsonify({'success': True})
 
 @main.route('/cart/remove', methods=['POST'])
 def remove_from_cart():

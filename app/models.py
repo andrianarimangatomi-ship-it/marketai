@@ -17,6 +17,17 @@ class Item(db.Model):
     def __repr__(self):
         return f"Item('{self.title}', '{self.category}')"
 
+    def reinforcement_score(self):
+        """Score utilisé par l'IA pour classer les articles."""
+        ctr = (self.clicks / self.views) if self.views else 0.0
+        like_factor = self.likes or 0
+        freshness = min((datetime.utcnow() - self.created_at).days / 30, 1.0)
+        return ctr * 0.7 + (like_factor * 0.2) + ((1.0 - freshness) * 0.1)
+
+    def score_popularite(self):
+        """Score de popularité basé sur le taux de clics."""
+        return (self.clicks / self.views) if self.views else 0.0
+
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(100), nullable=False)

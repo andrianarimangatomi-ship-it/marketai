@@ -29,7 +29,7 @@ def build_similarity_matrix():
     texts = [f"{item.title} {item.description}" for item in items]
     _item_ids = [item.id for item in items]
     
-    _vectorizer = TfidfVectorizer(stop_words=None, min_df=1, max_df=0.9)
+    _vectorizer = TfidfVectorizer(stop_words=None, min_df=1, max_df=1.0)
     tfidf_matrix = _vectorizer.fit_transform(texts)
     _similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
 

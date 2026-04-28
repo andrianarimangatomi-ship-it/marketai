@@ -1,127 +1,609 @@
+/* ============================================
+   MarketAI — Style professionnel dark/cyber
+   Version 2.0 — Redesign complet
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap');
+
+/* ---- Reset & Base ---- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
 body {
-    font-family: 'Poppins', 'Segoe UI', sans-serif;
-    background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
-    color: #eef5ff;
+    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    background: #080c18;
+    color: #e8f0ff;
     line-height: 1.6;
     overflow-x: hidden;
 }
+
+/* ---- Particles (conservé) ---- */
 #particles-js {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     z-index: 0;
     pointer-events: none;
 }
+
 .container, .navbar, footer {
     position: relative;
     z-index: 2;
 }
-h1, h2, h3, .navbar-brand, .btn-glow {
+
+/* ---- Typographie ---- */
+h1, h2, h3, .navbar-brand {
     font-family: 'Orbitron', monospace;
 }
+
 h1 {
-    font-size: 3rem;
-    background: linear-gradient(135deg, #aaffff, #00a6ff);
+    font-size: 2.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #00c8ff 60%, #7b8fff 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    line-height: 1.2;
 }
+
+h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(200, 220, 255, 0.9);
+    letter-spacing: 0.5px;
+}
+
+/* ---- Navbar ---- */
 .navbar {
-    background: rgba(10, 20, 30, 0.7);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    background: rgba(8, 12, 24, 0.95) !important;
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(0, 200, 255, 0.12);
+    padding: 0 1.5rem;
+    height: 60px;
 }
+
 .navbar-brand {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #0ff !important;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #00c8ff !important;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+
+.navbar-brand::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #00c8ff;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 200, 255, 0.5); }
+    50%       { box-shadow: 0 0 0 6px rgba(0, 200, 255, 0); }
+}
+
 .nav-link {
-    color: #ccf !important;
-    transition: 0.3s;
+    color: rgba(200, 220, 255, 0.55) !important;
+    font-size: 14px;
+    padding: 6px 14px !important;
+    border-radius: 8px;
+    transition: all 0.2s;
 }
+
 .nav-link:hover {
-    color: #0ff !important;
+    color: #00c8ff !important;
+    background: rgba(0, 200, 255, 0.08);
 }
+
+/* ---- Boutons ---- */
 .btn-neon {
     background: transparent;
-    border: 1.5px solid #0ff;
-    color: #0ff;
-    padding: 8px 24px;
-    border-radius: 40px;
-    transition: 0.2s;
+    border: 1px solid rgba(0, 200, 255, 0.4);
+    color: #00c8ff;
+    padding: 7px 20px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
 }
+
 .btn-neon:hover {
-    background: #0ff;
-    color: #000;
-    box-shadow: 0 0 15px #0ff;
+    background: rgba(0, 200, 255, 0.12);
+    border-color: #00c8ff;
+    color: #00c8ff;
+    box-shadow: 0 0 16px rgba(0, 200, 255, 0.2);
+    transform: translateY(-1px);
 }
+
 .btn-glow {
-    background: linear-gradient(45deg, #00c6ff, #0072ff);
+    background: linear-gradient(135deg, #0090cc, #00c8ff);
     border: none;
-    color: white;
-    padding: 10px 28px;
-    border-radius: 40px;
-    transition: 0.3s;
-    box-shadow: 0 0 12px #0072ff;
+    color: #080c18;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
 }
+
 .btn-glow:hover {
-    transform: scale(1.03);
-    box-shadow: 0 0 22px #00c6ff;
+    opacity: 0.9;
+    transform: scale(1.02);
+    box-shadow: 0 0 24px rgba(0, 200, 255, 0.35);
+    color: #080c18;
 }
-.card-futuristic {
-    background: rgba(15, 25, 45, 0.55);
-    backdrop-filter: blur(8px);
-    border-radius: 24px;
-    border: 1px solid rgba(0, 255, 255, 0.3);
-    transition: 0.25s;
+
+/* Panier dans la navbar */
+.btn-cart {
+    background: rgba(0, 200, 255, 0.1);
+    border: 1px solid rgba(0, 200, 255, 0.25);
+    color: #00c8ff;
+    padding: 7px 16px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
-.card-futuristic:hover {
-    transform: translateY(-5px);
-    border-color: #0ff;
-    box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+
+.btn-cart:hover {
+    background: rgba(0, 200, 255, 0.18);
+    border-color: #00c8ff;
+    color: #00c8ff;
 }
-.form-control, textarea, input, select {
-    background: rgba(0, 0, 0, 0.6) !important;
-    border: 1px solid #2c3e66 !important;
-    color: #fff !important;
-    border-radius: 16px !important;
+
+.cart-badge {
+    background: #00c8ff;
+    color: #080c18;
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
-.form-control:focus {
-    border-color: #0ff !important;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+
+/* ---- Hero Section ---- */
+.hero-section {
+    padding: 3.5rem 0 3rem;
+    text-align: center;
+    position: relative;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0, 200, 255, 0.06) 0%, transparent 65%);
+    border-bottom: 1px solid rgba(0, 200, 255, 0.07);
+    margin-bottom: 0;
 }
+
+.hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 200, 255, 0.08);
+    border: 1px solid rgba(0, 200, 255, 0.18);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #00c8ff;
+    margin-bottom: 1rem;
+    letter-spacing: 1.5px;
+}
+
+.hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #00c8ff;
+    border-radius: 50%;
+}
+
+.hero-subtitle {
+    color: rgba(180, 200, 255, 0.55);
+    font-size: 15px;
+    margin-bottom: 2rem;
+}
+
 .floating-glow {
-    animation: floatGlow 2s infinite alternate;
+    animation: floatGlow 3s ease-in-out infinite alternate;
 }
+
 @keyframes floatGlow {
-    0% { text-shadow: 0 0 2px cyan; }
-    100% { text-shadow: 0 0 12px cyan; }
+    0%   { filter: drop-shadow(0 0 6px rgba(0,200,255,0.3)); }
+    100% { filter: drop-shadow(0 0 20px rgba(0,200,255,0.6)); }
 }
-/* Amélioration des cartes et images */
+
+/* ---- Barre de recherche ---- */
+.search-wrapper {
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.form-control, textarea, input, select {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(0, 200, 255, 0.18) !important;
+    color: #e8f0ff !important;
+    border-radius: 10px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 14px !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control::placeholder {
+    color: rgba(180, 200, 255, 0.3) !important;
+}
+
+.form-control:focus {
+    border-color: rgba(0, 200, 255, 0.45) !important;
+    box-shadow: 0 0 0 3px rgba(0, 200, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+}
+
+.form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300c8ff' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+}
+
+/* ---- Filtres catégories ---- */
+.category-filters {
+    display: flex;
+    gap: 8px;
+    padding: 1.25rem 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.category-filters::-webkit-scrollbar { display: none; }
+
+.cat-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: rgba(180, 200, 255, 0.55);
+    white-space: nowrap;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+.cat-pill:hover,
+.cat-pill.active {
+    background: rgba(0, 200, 255, 0.1);
+    border-color: rgba(0, 200, 255, 0.4);
+    color: #00c8ff;
+}
+
+/* ---- Section header ---- */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.section-bar {
+    width: 3px;
+    height: 20px;
+    background: linear-gradient(to bottom, #00c8ff, transparent);
+    border-radius: 2px;
+}
+
+.section-count {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(0, 200, 255, 0.6);
+    background: rgba(0, 200, 255, 0.08);
+    border: 1px solid rgba(0, 200, 255, 0.15);
+    border-radius: 20px;
+    padding: 2px 10px;
+}
+
+/* ---- Cartes articles ---- */
 .card-futuristic {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+    transition: all 0.25s;
+    position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: 450px;
+    padding: 0 !important;
 }
+
+.card-futuristic::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00c8ff, transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.card-futuristic:hover {
+    border-color: rgba(0, 200, 255, 0.35) !important;
+    background: rgba(0, 200, 255, 0.03);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.card-futuristic:hover::before {
+    opacity: 1;
+}
+
+/* Image de la carte */
 .card-img-top {
     width: 100%;
-    height: 180px;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
+    border-radius: 0 !important;
+    display: block;
+    margin: 0 !important;
 }
+
+.card-img-placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: rgba(0, 200, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: rgba(0, 200, 255, 0.3);
+    font-size: 12px;
+}
+
+.card-img-placeholder-icon {
+    width: 40px; height: 40px;
+    border: 1px solid rgba(0, 200, 255, 0.2);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+}
+
+/* Badge catégorie sur l'image */
+.card-badge {
+    position: absolute;
+    top: 10px; left: 10px;
+    background: rgba(0, 200, 255, 0.12);
+    border: 1px solid rgba(0, 200, 255, 0.25);
+    color: #00c8ff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    font-family: 'Outfit', sans-serif;
+    z-index: 1;
+}
+
+/* Badge tendance */
+.card-badge-hot {
+    position: absolute;
+    bottom: 10px; left: 10px;
+    background: rgba(255, 80, 50, 0.15);
+    border: 1px solid rgba(255, 80, 50, 0.3);
+    color: #ff6040;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    z-index: 1;
+}
+
+/* Checkbox sélection groupée */
+.bulk-checkbox {
+    position: absolute;
+    top: 10px; right: 10px;
+    z-index: 10;
+    width: 18px; height: 18px;
+    cursor: pointer;
+    accent-color: #00c8ff;
+}
+
+/* Corps de la carte */
+.card-body-inner {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.card-title-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e8f0ff;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-price-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #00c8ff;
+    margin-bottom: 6px;
+}
+
+.card-price-text small {
+    font-size: 10px;
+    color: rgba(0, 200, 255, 0.5);
+    font-weight: 400;
+}
+
+.card-description {
+    color: rgba(180, 200, 255, 0.45);
+    font-size: 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    margin-bottom: 12px;
+    flex: 1;
+}
+
+/* Actions de la carte */
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.btn-voir {
+    flex: 1;
+    background: transparent;
+    border: 1px solid rgba(0, 200, 255, 0.3);
+    color: #00c8ff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Outfit', sans-serif;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: block;
+}
+
+.btn-voir:hover {
+    background: rgba(0, 200, 255, 0.1);
+    border-color: #00c8ff;
+    color: #00c8ff;
+}
+
+.btn-like {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(200, 220, 255, 0.5) !important;
+    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    transition: all 0.2s !important;
+    white-space: nowrap;
+}
+
+.btn-like:hover {
+    border-color: rgba(255, 80, 80, 0.4) !important;
+    background: rgba(255, 80, 80, 0.08) !important;
+    color: #ff6060 !important;
+}
+
+.btn-like.liked {
+    border-color: rgba(255, 80, 80, 0.4) !important;
+    background: rgba(255, 80, 80, 0.08) !important;
+    color: #ff6060 !important;
+}
+
+/* Bouton ajout groupé */
+.btn-bulk {
+    background: rgba(0, 200, 255, 0.08);
+    border: 1px solid rgba(0, 200, 255, 0.2);
+    color: #00c8ff;
+    padding: 8px 20px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.btn-bulk:hover {
+    background: rgba(0, 200, 255, 0.15);
+    border-color: #00c8ff;
+    color: #00c8ff;
+}
+
+/* ---- Pagination ---- */
+.pagination .page-link {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(0, 200, 255, 0.15);
+    color: rgba(180, 200, 255, 0.6);
+    border-radius: 8px !important;
+    margin: 0 2px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.pagination .page-link:hover {
+    background: rgba(0, 200, 255, 0.1);
+    border-color: rgba(0, 200, 255, 0.4);
+    color: #00c8ff;
+}
+
+.pagination .page-item.active .page-link {
+    background: rgba(0, 200, 255, 0.15);
+    border-color: rgba(0, 200, 255, 0.5);
+    color: #00c8ff;
+}
+
+.pagination .page-item.disabled .page-link {
+    opacity: 0.3;
+}
+
+/* ---- Séparateur section ---- */
+hr.section-divider {
+    border: none;
+    border-top: 1px solid rgba(0, 200, 255, 0.1);
+    margin: 2.5rem 0;
+}
+
+/* ---- Alertes ---- */
+.alert-warning {
+    background: rgba(255, 180, 0, 0.08);
+    border: 1px solid rgba(255, 180, 0, 0.2);
+    color: rgba(255, 200, 80, 0.9);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* ---- Footer ---- */
+footer {
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(0, 200, 255, 0.08);
+    padding: 1.5rem 0;
+    text-align: center;
+    color: rgba(180, 200, 255, 0.35);
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+}
+
+footer span {
+    color: #00c8ff;
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+}
+
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
-    .card-img-top {
-        height: 150px;
-    }
-    .card-futuristic {
-        min-height: auto;
-    }
+    h1 { font-size: 2rem; }
+    .hero-section { padding: 2.5rem 0 2rem; }
+    .card-futuristic { border-radius: 12px !important; }
+    .navbar-brand { font-size: 1.2rem; }
 }

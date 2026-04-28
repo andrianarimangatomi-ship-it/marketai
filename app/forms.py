@@ -12,6 +12,7 @@ class ItemForm(FlaskForm):
         ('motos', 'Motos'),
         ('guitares', 'Guitares'),
         ('vêtements', 'Vêtements'),
+        ('télephone', 'Téléphone'),
         ('autres', 'Autres')
     ], validators=[DataRequired()])
     image = FileField('Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images seulement')])

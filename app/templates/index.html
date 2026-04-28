@@ -1,214 +1,305 @@
 {% extends "base.html" %}
 {% block content %}
-<style>
-body {
-    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
-    font-family: 'Courier New', monospace !important;
-}
-.card-futuristic {
-    background: rgba(0, 0, 0, 0.8) !important;
-    border: 1px solid #00ccff !important;
-    position: relative;
-}
-.bulk-checkbox {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 10;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-</style>
-<div class="text-center mb-5">
-    <h1 class="display-3 floating-glow">MarketAI</h1>
-    <p class="lead">Trouvez l'article parfait que vous avez besoin</p>
-</div>
 
-<div class="row justify-content-center mb-3">
-    <div class="col-md-8">
-        <form action="{{ url_for('main.search') }}" method="get" class="d-flex gap-2">
-            <input type="text" name="q" class="form-control form-control-lg" placeholder="Rechercher un article..." value="{{ query or '' }}">
-            <select name="category" class="form-select form-select-lg w-auto">
+{# ================================================
+   MarketAI — Index redesigné v2.0
+   Toutes les variables Jinja2 sont conservées
+   ================================================ #}
+
+<!-- Hero -->
+<div class="hero-section">
+    <div class="hero-tag">VENTE ETO MADAGASIKARA</div>
+    <h1 class="floating-glow mb-2">MarketAI</h1>
+    <p class="hero-subtitle">Trouvez l'article parfait avec l'intelligence artificielle</p>
+
+    <div class="search-wrapper">
+        <form action="{{ url_for('main.search') }}" method="get" class="d-flex gap-2 w-100">
+            <input type="text" name="q"
+                   class="form-control form-control-lg flex-grow-1"
+                   placeholder="Rechercher voitures, guitares, vêtements..."
+                   value="{{ query or '' }}">
+            <select name="category" class="form-select form-select-lg" style="width:auto;flex-shrink:0;">
                 <option value="tous">Toutes catégories</option>
                 {% for cat in categories %}
-                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat|capitalize }}</option>
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+                    {{ cat|capitalize }}
+                </option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-glow btn-lg"><i class="fas fa-search"></i></button>
+            <button type="submit" class="btn btn-glow btn-lg px-4">
+                <i class="fas fa-search"></i>
+            </button>
         </form>
     </div>
 </div>
-<!-- Bouton pour ajouter les articles sélectionnés au panier -->
-<div class="row justify-content-center mb-4">
-    <div class="col-md-8 text-end">
-        <button id="bulk-add-cart" class="btn btn-glow"><i class="fas fa-cart-plus"></i> Ajouter les articles sélectionnés au panier</button>
+
+<!-- Filtres catégories -->
+<div class="container mt-3">
+    <div class="category-filters">
+        <a href="{{ url_for('main.index') }}" class="cat-pill {% if not selected_category or selected_category == 'tous' %}active{% endif %}">
+            Tout
+        </a>
+        {% for cat in categories %}
+        <a href="{{ url_for('main.search') }}?category={{ cat }}"
+           class="cat-pill {% if selected_category == cat %}active{% endif %}">
+            {{ cat|capitalize }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Bouton ajout groupé -->
+    <div class="d-flex justify-content-end mb-4">
+        <button id="bulk-add-cart" class="btn-bulk">
+            <i class="fas fa-cart-plus me-2"></i>Ajouter la sélection au panier
+        </button>
     </div>
 </div>
 
+<!-- ===== RÉSULTATS DE RECHERCHE ===== -->
 {% if results is defined %}
-    <h2 class="mb-4">Résultats pour "{{ query or selected_category }}"</h2>
-    {% if results %}
-        <div class="row">
-            {% for item in results %}
-            <div class="col-md-4 col-lg-3 mb-4">
-                <div class="card-futuristic h-100 p-3">
-                    <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-                    {% if item.image_url %}
-                        <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 150px; object-fit: cover; border-radius: 12px;">
-                    {% else %}
-                        <div class="bg-secondary text-center py-5 mb-3" style="border-radius: 12px;">Image</div>
-                    {% endif %}
-                    <h5>{{ item.title }}</h5>
-                    <p class="text-info">{{ item.price }} Ar</p>
-                    <p class="small">{{ item.description[:80] }}...</p>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-neon w-40 track-click" data-id="{{ item.id }}">Voir détail</a>
-                        <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
-                        <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
-                            ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% if pagination and pagination.pages > 1 %}
-        <nav aria-label="Pagination résultats">
-            <ul class="pagination justify-content-center mt-4">
-                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                    <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.prev_num }}">Précédent</a>
-                </li>
-                {% for p in range(1, pagination.pages + 1) %}
-                <li class="page-item {% if p == pagination.page %}active{% endif %}"><a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ p }}">{{ p }}</a></li>
-                {% endfor %}
-                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                    <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.next_num }}">Suivant</a>
-                </li>
-            </ul>
-        </nav>
+<div class="container">
+    <div class="section-header mb-3">
+        <div class="section-bar"></div>
+        <h2>Résultats pour "{{ query or selected_category }}"</h2>
+        {% if results %}
+        <span class="section-count">{{ results|length }} articles</span>
         {% endif %}
+    </div>
+
+    {% if results %}
+    <div class="row g-3">
+        {% for item in results %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card-futuristic h-100">
+                <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
+
+                <!-- Badge catégorie -->
+                <div class="card-badge">{{ item.category|upper if item.category else 'ARTICLE' }}</div>
+
+                <!-- Image -->
+                {% if item.image_url %}
+                <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
+                {% else %}
+                <div class="card-img-placeholder">
+                    <div class="card-img-placeholder-icon">📦</div>
+                    <span>image</span>
+                </div>
+                {% endif %}
+
+                <!-- Corps -->
+                <div class="card-body-inner">
+                    <div class="card-title-text">{{ item.title }}</div>
+                    <div class="card-price-text">{{ item.price }} <small>Ar</small></div>
+                    <p class="card-description">{{ item.description[:100] if item.description else '' }}...</p>
+                    <div class="card-actions">
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
+                           class="btn-voir track-click" data-id="{{ item.id }}">
+                            Voir détail
+                        </a>
+                        <button class="btn btn-like btn-sm btn-outline-danger"
+                                data-id="{{ item.id }}">
+                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination and pagination.pages > 1 %}
+    <nav class="mt-5" aria-label="Pagination">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.prev_num }}">
+                    ← Précédent
+                </a>
+            </li>
+            {% for p in range(1, pagination.pages + 1) %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ p }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.next_num }}">
+                    Suivant →
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
     {% else %}
-        <div class="alert alert-warning">Aucun résultat trouvé.</div>
+    <div class="alert alert-warning">
+        <i class="fas fa-search me-2"></i>Aucun résultat trouvé pour cette recherche.
+    </div>
     {% endif %}
+</div>
 {% endif %}
 
+<!-- ===== RECOMMANDATIONS IA ===== -->
 {% if recommendations %}
-    <hr class="my-5" style="border-color: #0ff;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0"><i class="fas fa-robot"></i> Recommandations</h2>
+<div class="container">
+    <hr class="section-divider">
+    <div class="section-header mb-2">
+        <div class="section-bar"></div>
+        <h2><i class="fas fa-robot me-2"></i>Recommandations IA</h2>
     </div>
-    <p class="text-muted mb-4">{{ ai_insights.reason }}</p>
-    <div class="row">
+    {% if ai_insights and ai_insights.reason %}
+    <p class="mb-4" style="color:rgba(180,200,255,0.45);font-size:13px;">{{ ai_insights.reason }}</p>
+    {% endif %}
+
+    <div class="row g-3">
         {% for item in recommendations %}
-        <div class="col-md-3 mb-4">
-            <div class="card-futuristic h-100 p-3">
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card-futuristic h-100">
                 <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
+                <div class="card-badge" style="background:rgba(123,143,255,0.12);border-color:rgba(123,143,255,0.3);color:#7b8fff;">IA</div>
+
                 {% if item.image_url %}
-                    <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover;">
+                <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
                 {% else %}
-                    <div class="bg-secondary text-center py-3 mb-3">Image</div>
+                <div class="card-img-placeholder" style="background:rgba(123,143,255,0.04);">
+                    <div class="card-img-placeholder-icon" style="border-color:rgba(123,143,255,0.2);">🤖</div>
+                    <span style="color:rgba(123,143,255,0.35);">recommandé</span>
+                </div>
                 {% endif %}
-                <h6>{{ item.title }}</h6>
-                <p class="text-info">{{ item.price }} Ar</p>
-                <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Découvrir</a>
-                    <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
-                    <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
-                        ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                    </button>
+
+                <div class="card-body-inner">
+                    <div class="card-title-text">{{ item.title }}</div>
+                    <div class="card-price-text" style="color:#7b8fff;">
+                        {{ item.price }} <small style="color:rgba(123,143,255,0.5);">Ar</small>
+                    </div>
+                    <div class="card-actions">
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
+                           class="btn-voir track-click" data-id="{{ item.id }}"
+                           style="border-color:rgba(123,143,255,0.3);color:#7b8fff;">
+                            Voir détail
+                        </a>
+                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">
+                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-    {% if trending_items %}
-        <hr class="my-5" style="border-color: #0ff;">
-        <h2 class="mb-4"><i class="fas fa-fire"></i> Tendances </h2>
-        <div class="row">
-            {% for item in trending_items %}
-            <div class="col-md-3 mb-4">
-                <div class="card-futuristic h-100 p-3 border border-warning">
-                    <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-                    {% if item.image_url %}
-                        <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover;">
-                    {% else %}
-                        <div class="bg-secondary text-center py-3 mb-3">Image</div>
-                    {% endif %}
-                    <h6>{{ item.title }}</h6>
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Découvrir</a>
-                        <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
-                        <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
-                            ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-{% elif not results %}
-    {% if trending_items %}
-        <h2 class="mb-4"><i class="fas fa-fire"></i> Articles populaires</h2>
-        <div class="row">
-            {% for item in trending_items %}
-            <div class="col-md-3 mb-4">
-                <div class="card-futuristic h-100 p-3 border border-warning">
-                    <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-                    {% if item.image_url %}
-                        <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover; border-radius: 12px;">
-                    {% else %}
-                        <div class="bg-secondary text-center py-3 mb-3" style="border-radius: 12px;">Image</div>
-                    {% endif %}
-                    <h6>{{ item.title }}</h6>
-                    <p class="text-info">{{ item.price }} Ar</p>
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-sm btn-neon track-click" data-id="{{ item.id }}">Voir détail</a>
-                        <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
-                        <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
-                            ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        <hr class="my-5" style="border-color: #0ff;">
-    {% endif %}
-    <h2 class="mb-4">Articles récents</h2>
-    <div class="row">
-        {% for item in featured %}
-        <div class="col-md-4 mb-4">
-            <div class="card-futuristic h-100 p-3 border border-secondary">
-                <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-                {% if item.image_url %}
-                    <img src="{{ item.image_url }}" class="card-img-top mb-3" style="height: 120px; object-fit: cover; border-radius: 12px;">
-                {% else %}
-                    <div class="bg-secondary text-center py-3 mb-3" style="border-radius: 12px;">Image</div>
-                {% endif %}
-                <h5>{{ item.title }}</h5>
-                <p class="text-info">{{ item.price }} Ar</p>
-                <p>{{ item.description[:100] }}...</p>
-                <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn btn-neon track-click" data-id="{{ item.id }}">Voir</a>
-                    <button class="btn-add-cart btn btn-sm btn-outline-info" data-id="{{ item.id }}"><i class="fas fa-cart-plus"></i> Ajouter</button>
-                    <button class="btn-like btn btn-outline-danger btn-sm" data-id="{{ item.id }}">
-                        ❤️ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+</div>
 {% endif %}
 
+<!-- ===== TENDANCES ===== -->
+{% if trending_items %}
+<div class="container">
+    <hr class="section-divider">
+    <div class="section-header mb-3">
+        <div class="section-bar" style="background:linear-gradient(to bottom,#ff6040,transparent);"></div>
+        <h2><i class="fas fa-fire me-2" style="color:#ff6040;"></i>Tendances</h2>
+        <span class="section-count" style="background:rgba(255,96,64,0.08);border-color:rgba(255,96,64,0.2);color:#ff6040;">
+            {{ trending_items|length }} articles
+        </span>
+    </div>
+
+    <div class="row g-3">
+        {% for item in trending_items %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card-futuristic h-100" style="border-color:rgba(255,96,64,0.2)!important;">
+                <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
+                <div class="card-badge" style="background:rgba(255,96,64,0.12);border-color:rgba(255,96,64,0.3);color:#ff6040;">
+                    🔥 TENDANCE
+                </div>
+
+                {% if item.image_url %}
+                <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
+                {% else %}
+                <div class="card-img-placeholder" style="background:rgba(255,96,64,0.04);">
+                    <div class="card-img-placeholder-icon" style="border-color:rgba(255,96,64,0.2);">🔥</div>
+                    <span style="color:rgba(255,96,64,0.35);">tendance</span>
+                </div>
+                {% endif %}
+
+                <div class="card-body-inner">
+                    <div class="card-title-text">{{ item.title }}</div>
+                    <div class="card-price-text" style="color:#ff8060;">
+                        {{ item.price }} <small style="color:rgba(255,96,64,0.5);">Ar</small>
+                    </div>
+                    <div class="card-actions">
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
+                           class="btn-voir track-click" data-id="{{ item.id }}"
+                           style="border-color:rgba(255,96,64,0.3);color:#ff8060;">
+                            Voir détail
+                        </a>
+                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">
+                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== ARTICLES RÉCENTS (page d'accueil) ===== -->
+{% if not results and not recommendations and featured %}
+<div class="container">
+    <div class="section-header mb-3">
+        <div class="section-bar"></div>
+        <h2>Articles récents</h2>
+        <span class="section-count">{{ featured|length }} articles</span>
+    </div>
+
+    <div class="row g-3">
+        {% for item in featured %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card-futuristic h-100">
+                <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
+                {% if item.category %}
+                <div class="card-badge">{{ item.category|upper }}</div>
+                {% endif %}
+
+                {% if item.image_url %}
+                <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
+                {% else %}
+                <div class="card-img-placeholder">
+                    <div class="card-img-placeholder-icon">📦</div>
+                    <span>pas d'image</span>
+                </div>
+                {% endif %}
+
+                <div class="card-body-inner">
+                    <div class="card-title-text">{{ item.title }}</div>
+                    <div class="card-price-text">{{ item.price }} <small>Ar</small></div>
+                    <p class="card-description">{{ item.description[:100] if item.description else '' }}...</p>
+                    <div class="card-actions">
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
+                           class="btn-voir track-click" data-id="{{ item.id }}">
+                            Voir détail
+                        </a>
+                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">
+                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div style="height:3rem;"></div>
+
+<!-- ===== SCRIPTS ===== -->
 <script>
-    // Gestion des likes (AJAX)
+    /* --- Likes AJAX --- */
     document.querySelectorAll('.btn-like').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             const itemId = this.dataset.id;
+            const countEl = this.querySelector('.like-count');
             fetch(`/like/${itemId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
@@ -216,35 +307,26 @@ body {
             .then(res => res.json())
             .then(data => {
                 if (data.likes !== undefined) {
-                    this.querySelector('.like-count').innerText = data.likes;
+                    countEl.innerText = data.likes;
+                    this.classList.add('liked');
+                    this.innerHTML = `♥ <span class="like-count">${data.likes}</span>`;
                 }
             })
             .catch(err => console.error('Erreur like:', err));
         });
     });
 
-    // Ajout individuel au panier
-    document.querySelectorAll('.btn-add-cart').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const itemId = this.dataset.id;
-            fetch(`/add-to-cart/${itemId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'quantity=1'
-            })
-            .then(() => location.reload())
-            .catch(err => console.error('Erreur ajout panier:', err));
-        });
-    });
-
-    // Ajout groupé au panier
+    /* --- Ajout groupé au panier --- */
     document.getElementById('bulk-add-cart').addEventListener('click', function() {
-        const selected = Array.from(document.querySelectorAll('.bulk-checkbox:checked')).map(cb => cb.value);
+        const selected = Array.from(
+            document.querySelectorAll('.bulk-checkbox:checked')
+        ).map(cb => cb.value);
+
         if (selected.length === 0) {
             alert('Veuillez sélectionner au moins un article.');
             return;
         }
+
         fetch('/add-bulk-to-cart', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -254,13 +336,15 @@ body {
         .then(data => {
             if (data.success) {
                 alert(`${selected.length} article(s) ajouté(s) au panier.`);
-                document.querySelectorAll('.bulk-checkbox:checked').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.bulk-checkbox:checked')
+                    .forEach(cb => cb.checked = false);
                 location.reload();
             } else {
-                alert('Erreur lors de l\'ajout au panier.');
+                alert("Erreur lors de l'ajout au panier.");
             }
         })
         .catch(err => console.error('Erreur bulk add:', err));
     });
 </script>
+
 {% endblock %}

@@ -109,6 +109,19 @@ def add_bulk_to_cart():
         session['cart'][id_str] = session['cart'].get(id_str, 0) + 1
     session.modified = True
     return jsonify({'success': True, 'count': len(item_ids)})
+@main.route('/cart/update', methods=['POST'])
+def update_cart():
+    data = request.get_json()
+    item_id = str(data.get('item_id'))
+    quantity = int(data.get('quantity', 1))
+    if 'cart' not in session:
+        return jsonify({'success': False})
+    if quantity <= 0:
+        session['cart'].pop(item_id, None)
+    else:
+        session['cart'][item_id] = quantity
+    session.modified = True
+    return jsonify({'success': True})
 
 @main.route('/cart/remove', methods=['POST'])
 def remove_from_cart():

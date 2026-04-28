@@ -6,11 +6,31 @@ from app.ia import get_recommendations, update_click_metrics, update_view_metric
 from app.similarite import get_similar_items, refresh_similarity
 from app.tags_ia import generate_tags_for_item
 from werkzeug.utils import secure_filename
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 import os
 import uuid
 
 main = Blueprint('main', __name__)
 admin = Blueprint('admin', __name__)
+
+# ---------- Recherche sémantique ----------
+def semantic_search(query, limit=12):
+    """Recherche sémantique basée sur la similarité cosinus (TF-IDF)."""
+    from app.similarite import build_similarity_matrix, _vectorizer
+    if _vectorizer is None:
+        build_similarity_matrix()
+    if _vectorizer is None:
+        return []
+    items = Item.query.all()
+    if not items:
+        return []
+    texts = [f"{item.title} {item.description}" for item in items]
+    query_vec = _vectorizer.transform([query])
+    item_tfidf = _vectorizer.transform(texts)
+    similarities = cosine_similarity(query_vec, item_tfidf)[0]
+    indices = np.argsort(similarities)[::-1][:limit]
+    return [items[i] for i in indices if similarities[i] > 0]
 
 # ---------- Public ----------
 @main.route('/')
@@ -26,15 +46,21 @@ def search():
     query = request.args.get('q', '')
     category = request.args.get('category', '')
     page = request.args.get('page', 1, type=int)
-    items_query = Item.query
-    if query:
-        items_query = items_query.filter(Item.title.contains(query) | Item.description.contains(query))
-    if category and category != 'tous':
-        items_query = items_query.filter_by(category=category)
 
-    pagination = items_query.order_by(Item.created_at.desc()).paginate(page=page, per_page=8, error_out=False)
-    results = pagination.items
+    # Recherche sémantique si requête texte sans catégorie spécifique
+    if query and (not category or category == 'tous'):
+        results = semantic_search(query, limit=12)
+        pagination = None
+    else:
+        items_query = Item.query
+        if query:
+            items_query = items_query.filter(Item.title.contains(query) | Item.description.contains(query))
+        if category and category != 'tous':
+            items_query = items_query.filter_by(category=category)
+        pagination = items_query.order_by(Item.created_at.desc()).paginate(page=page, per_page=8, error_out=False)
+        results = pagination.items
 
+    # Historique de recherche
     if 'search_history' not in session:
         session['search_history'] = []
     if category and category != 'tous':
@@ -58,7 +84,10 @@ def search():
     ai_insights = get_ai_insights(session.get('search_history', []))
     trending_items = get_trending_items(limit=4)
 
-    return render_template('index.html', results=results, pagination=pagination, recommendations=recommendations, query=query, selected_category=category, ai_insights=ai_insights, trending_items=trending_items)
+    return render_template('index.html', results=results, pagination=pagination,
+                           recommendations=recommendations, query=query,
+                           selected_category=category, ai_insights=ai_insights,
+                           trending_items=trending_items)
 
 @main.route('/click/<int:item_id>')
 def track_click(item_id):
@@ -93,6 +122,7 @@ def add_to_cart(item_id):
     session.modified = True
     flash(f'{item.title} ajouté au panier', 'success')
     return redirect(request.referrer or url_for('main.index'))
+
 @main.route('/add-bulk-to-cart', methods=['POST'])
 def add_bulk_to_cart():
     data = request.get_json()
@@ -101,7 +131,6 @@ def add_bulk_to_cart():
     item_ids = data.get('item_ids', [])
     if not item_ids:
         return jsonify({'success': False, 'error': 'No items selected'}), 400
-
     if 'cart' not in session:
         session['cart'] = {}
     for item_id in item_ids:
@@ -109,6 +138,7 @@ def add_bulk_to_cart():
         session['cart'][id_str] = session['cart'].get(id_str, 0) + 1
     session.modified = True
     return jsonify({'success': True, 'count': len(item_ids)})
+
 @main.route('/cart/update', methods=['POST'])
 def update_cart():
     data = request.get_json()
@@ -144,7 +174,6 @@ def clear_cart():
 # ---------- Checkout & Order Routes ----------
 @main.route('/checkout', methods=['GET', 'POST'])
 def checkout():
-    # Si achat direct depuis page détail (paramètre item_id)
     direct_item_id = request.args.get('item_id')
     if direct_item_id and not session.get('cart'):
         session['cart'] = {str(direct_item_id): 1}

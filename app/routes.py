@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 import cloudinary
 import cloudinary.uploader
-from google import genai  # NOUVEAU SDK
 import numpy as np
 import os
 import uuid
@@ -26,9 +25,6 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     secure=True
 )
-
-# ---------- Configuration Gemini (nouveau SDK) ----------
-client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
 # ---------- Recherche sémantique ----------
 def semantic_search(query, limit=12):
@@ -57,36 +53,25 @@ def test_cloudinary():
     except Exception as e:
         return f"Erreur : {repr(e)}"
 
-# ---------- Chatbot IA (nouvelle version) ----------
+# ---------- Chatbot IA (version sans API, basée sur mots-clés) ----------
 @main.route('/chatbot', methods=['POST'])
 def chatbot():
     data = request.get_json()
-    user_message = data.get('message', '').strip()
-    if not user_message:
-        return jsonify({'reply': "Bonjour ! Posez-moi une question sur nos produits."})
+    user_message = data.get('message', '').lower()
     
-    try:
-        products = Item.query.order_by(Item.created_at.desc()).limit(20).all()
-        product_info = "\n".join([f"- {p.title} : {p.description[:100]}... (prix: {p.price} Ar, likes: {p.likes})" for p in products])
-        
-        prompt = f"""Tu es un assistant shopping pour le site MarketAI (vente à Madagascar).
-Voici quelques produits disponibles :
-{product_info}
-
-L'utilisateur demande : {user_message}
-Réponds de manière utile, précise et courte (max 2 phrases). Si la question ne concerne pas les produits de la liste, dis poliment que tu ne peux pas répondre."""
-        
-        # Utilisation du nouveau SDK
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",  # ou "gemini-2.0-flash-lite"
-            contents=prompt
-        )
-        reply = response.text.strip()
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"=== ERREUR GEMINI ===\n{error_details}\n===================")
-        reply = "Désolé, je rencontre un problème technique. Veuillez réessayer plus tard."
+    # Réponses basées sur mots-clés
+    if 'guitare' in user_message or 'guitar' in user_message:
+        reply = "🎸 Nos meilleures guitares : Fender Stratocaster, Gibson Les Paul, Yamaha FG800. Consultez la catégorie 'Guitares'."
+    elif 'voiture' in user_message or 'voitures' in user_message:
+        reply = "🚗 Voitures économiques recommandées : Toyota Yaris, Suzuki Ignis, Dacia Sandero. Découvrez nos offres dans 'Voitures'."
+    elif 'téléphone' in user_message or 'smartphone' in user_message:
+        reply = "📱 Téléphones populaires : iPhone 15, Samsung Galaxy S24, Xiaomi Redmi Note 13. Voir la catégorie 'Téléphone'."
+    elif 'moto' in user_message or 'motos' in user_message:
+        reply = "🏍️ Motos disponibles : Yamaha MT-07, Honda CB500F, Kawasaki Z400. Parcourez la catégorie 'Motos'."
+    elif 'prix' in user_message or 'combien' in user_message:
+        reply = "💰 Les prix sont affichés sur chaque fiche produit (en Ariary). Utilisez le filtre par catégorie ou la recherche."
+    else:
+        reply = "🤖 Je suis votre assistant MarketAI. Posez-moi une question sur nos produits (guitare, voiture, téléphone, moto). Vous pouvez aussi parcourir les catégories."
     
     return jsonify({'reply': reply})
 

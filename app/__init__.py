@@ -10,7 +10,9 @@ def create_app():
 
     database_url = os.getenv('DATABASE_URL')
     if database_url:
-        database_url = database_url.replace('postgres://', 'postgresql://')
+        # Force l'utilisation du driver psycopg (version 3) au lieu de psycopg2
+        database_url = database_url.replace('postgres://', 'postgresql+psycopg://')
+        database_url = database_url.replace('postgresql://', 'postgresql+psycopg://')
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     else:
         os.makedirs(app.instance_path, exist_ok=True)

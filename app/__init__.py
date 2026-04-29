@@ -35,10 +35,5 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        try:
-            from app.similarite import build_similarity_matrix
-            build_similarity_matrix()
-        except Exception as e:
-            print(f"Erreur similarité: {e}")
 
     return app

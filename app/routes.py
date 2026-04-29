@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 import cloudinary
 import cloudinary.uploader
-import google.generativeai as genai
+from google import genai  # NOUVEAU SDK
 import numpy as np
 import os
 import uuid
@@ -27,8 +27,8 @@ cloudinary.config(
     secure=True
 )
 
-# ---------- Configuration Gemini ----------
-genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+# ---------- Configuration Gemini (nouveau SDK) ----------
+client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
 # ---------- Recherche sémantique ----------
 def semantic_search(query, limit=12):
@@ -57,7 +57,7 @@ def test_cloudinary():
     except Exception as e:
         return f"Erreur : {repr(e)}"
 
-# ---------- Chatbot IA ----------
+# ---------- Chatbot IA (nouvelle version) ----------
 @main.route('/chatbot', methods=['POST'])
 def chatbot():
     data = request.get_json()
@@ -66,7 +66,6 @@ def chatbot():
         return jsonify({'reply': "Bonjour ! Posez-moi une question sur nos produits."})
     
     try:
-        # Récupérer les produits récents pour contexte
         products = Item.query.order_by(Item.created_at.desc()).limit(20).all()
         product_info = "\n".join([f"- {p.title} : {p.description[:100]}... (prix: {p.price} Ar, likes: {p.likes})" for p in products])
         
@@ -77,11 +76,16 @@ Voici quelques produits disponibles :
 L'utilisateur demande : {user_message}
 Réponds de manière utile, précise et courte (max 2 phrases). Si la question ne concerne pas les produits de la liste, dis poliment que tu ne peux pas répondre."""
         
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
+        # Utilisation du nouveau SDK
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",  # ou "gemini-2.0-flash-lite"
+            contents=prompt
+        )
         reply = response.text.strip()
     except Exception as e:
-        print(f"Erreur Gemini: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"=== ERREUR GEMINI ===\n{error_details}\n===================")
         reply = "Désolé, je rencontre un problème technique. Veuillez réessayer plus tard."
     
     return jsonify({'reply': reply})

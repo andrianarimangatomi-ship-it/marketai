@@ -22,4 +22,4 @@ psycopg[binary]>=3.2
 nltk==3.8.1
 Flask-Migrate==4.0.5
 cloudinary>=1.33.0
-google-generativeai
+google-genai

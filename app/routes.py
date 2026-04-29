@@ -42,6 +42,16 @@ def semantic_search(query, limit=12):
     indices = np.argsort(similarities)[::-1][:limit]
     return [items[i] for i in indices if similarities[i] > 0]
 
+# ---------- Route de test Cloudinary ----------
+@main.route('/test-cloudinary')
+def test_cloudinary():
+    try:
+        # Test avec une image publique connue
+        result = cloudinary.uploader.upload("https://res.cloudinary.com/demo/image/upload/sample.jpg", folder="marketai_test")
+        return f"Succès : {result['secure_url']}"
+    except Exception as e:
+        return f"Erreur : {repr(e)}"
+
 # ---------- Public ----------
 @main.route('/')
 def index():
@@ -317,11 +327,13 @@ def save_image_file(image):
     """Upload l'image sur Cloudinary et retourne l'URL sécurisée."""
     if image and image.filename:
         try:
+            print(f"Tentative d'upload de {image.filename} vers Cloudinary")
             upload_result = cloudinary.uploader.upload(image, folder="marketai")
+            print(f"Upload réussi : {upload_result['secure_url']}")
             return upload_result['secure_url']
         except Exception as e:
-            print(f"Erreur Cloudinary: {e}")
-            flash("Erreur lors de l'upload de l'image. Vérifiez vos clés Cloudinary.", "danger")
+            print(f"Erreur Cloudinary détaillée : {repr(e)}")
+            flash(f"Erreur Cloudinary : {e}", "danger")
             return None
     return None
 

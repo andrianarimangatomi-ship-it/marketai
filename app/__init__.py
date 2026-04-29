@@ -13,9 +13,11 @@ def create_app():
         database_url = database_url.replace('postgres://', 'postgresql://')
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+        os.makedirs(app.instance_path, exist_ok=True)
+        app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'site.db')}"
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SESSION_PERMANENT'] = False
 
     upload_folder = os.path.join(app.root_path, 'static', 'uploads')
     os.makedirs(upload_folder, exist_ok=True)

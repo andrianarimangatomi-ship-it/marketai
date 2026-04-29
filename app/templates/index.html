@@ -62,7 +62,11 @@
 <div class="container">
     <div class="section-header mb-3">
         <div class="section-bar"></div>
-        <h2>Résultats pour "{{ query or selected_category }}"</h2>
+        {% if semantic_search_used %}
+            <h2>Résultats de la recherche sémantique pour "{{ query }}"</h2>
+        {% else %}
+            <h2>Résultats pour "{{ query or selected_category }}"</h2>
+        {% endif %}
         {% if results %}
         <span class="section-count">{{ results|length }} articles</span>
         {% endif %}

@@ -47,10 +47,12 @@ def search():
     category = request.args.get('category', '')
     page = request.args.get('page', 1, type=int)
 
+    semantic_search_used = False
     # Recherche sémantique si requête texte sans catégorie spécifique
     if query and (not category or category == 'tous'):
         results = semantic_search(query, limit=12)
         pagination = None
+        semantic_search_used = True
     else:
         items_query = Item.query
         if query:
@@ -87,7 +89,8 @@ def search():
     return render_template('index.html', results=results, pagination=pagination,
                            recommendations=recommendations, query=query,
                            selected_category=category, ai_insights=ai_insights,
-                           trending_items=trending_items)
+                           trending_items=trending_items,
+                           semantic_search_used=semantic_search_used)
 
 @main.route('/click/<int:item_id>')
 def track_click(item_id):

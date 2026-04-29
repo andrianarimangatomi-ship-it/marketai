@@ -31,8 +31,6 @@
             </button>
         </form>
     </div>
-    <!-- LIGNE AJOUTÉE POUR LA RECHERCHE SÉMANTIQUE IA -->
-    <p class="mt-2 text-muted small"><i class="fas fa-microchip"></i> Recherche sémantique par IA (similarité cosinus)</p>
 </div>
 
 <!-- Filtres catégories -->
@@ -62,11 +60,7 @@
 <div class="container">
     <div class="section-header mb-3">
         <div class="section-bar"></div>
-        {% if semantic_search_used %}
-            <h2>Résultats de la recherche sémantique pour "{{ query }}"</h2>
-        {% else %}
-            <h2>Résultats pour "{{ query or selected_category }}"</h2>
-        {% endif %}
+        <h2>Résultats pour "{{ query or selected_category }}"</h2>
         {% if results %}
         <span class="section-count">{{ results|length }} articles</span>
         {% endif %}

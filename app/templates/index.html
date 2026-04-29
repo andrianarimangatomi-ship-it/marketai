@@ -1,56 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
 
-{# ================================================
-   MarketAI — Index redesigné v2.0
-   Toutes les variables Jinja2 sont conservées
-   ================================================ #}
-
-<!-- Hero -->
-<div class="hero-section">
-    <div class="hero-tag">VENTE ETO MADAGASIKARA</div>
-    <h1 class="floating-glow mb-2">MarketAI</h1>
-    <p class="hero-subtitle">Trouvez l'article parfait avec l'intelligence artificielle</p>
-
-    <div class="search-wrapper">
-        <form action="{{ url_for('main.search') }}" method="get" class="d-flex gap-2 w-100">
-            <input type="text" name="q"
-                   class="form-control form-control-lg flex-grow-1"
-                   placeholder="Rechercher voitures, guitares, vêtements..."
-                   value="{{ query or '' }}">
-            <select name="category" class="form-select form-select-lg" style="width:auto;flex-shrink:0;">
+<!-- Barre de recherche (sans hero) -->
+<div class="container mt-2 mb-2">
+    <form action="{{ url_for('main.search') }}" method="get" class="row g-2 align-items-center justify-content-center">
+        <div class="col-sm-6 col-md-5">
+            <input type="text" name="q" class="form-control" placeholder="Rechercher un article..." value="{{ query or '' }}">
+        </div>
+        <div class="col-auto">
+            <select name="category" class="form-select">
                 <option value="tous">Toutes catégories</option>
                 {% for cat in categories %}
-                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
-                    {{ cat|capitalize }}
-                </option>
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat|capitalize }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-glow btn-lg px-4">
-                <i class="fas fa-search"></i>
-            </button>
-        </form>
-    </div>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-glow"><i class="fas fa-search me-1"></i>Rechercher</button>
+        </div>
+    </form>
 </div>
 
-<!-- Filtres catégories -->
-<div class="container mt-3">
-    <div class="category-filters">
-        <a href="{{ url_for('main.index') }}" class="cat-pill {% if not selected_category or selected_category == 'tous' %}active{% endif %}">
-            Tout
-        </a>
-        {% for cat in categories %}
-        <a href="{{ url_for('main.search') }}?category={{ cat }}"
-           class="cat-pill {% if selected_category == cat %}active{% endif %}">
-            {{ cat|capitalize }}
-        </a>
-        {% endfor %}
-    </div>
-
-    <!-- Bouton ajout groupé -->
-    <div class="d-flex justify-content-end mb-4">
+<!-- Filtres catégories + bouton sélection (bien séparés) -->
+<div class="container">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 py-2" style="border-bottom: 1px solid rgba(0,200,255,0.15); margin-bottom: 1rem;">
+        <div class="category-filters d-flex flex-wrap gap-2">
+            <a href="{{ url_for('main.index') }}" class="cat-pill {% if not selected_category or selected_category == 'tous' %}active{% endif %}">Tout</a>
+            {% for cat in categories %}
+            <a href="{{ url_for('main.search') }}?category={{ cat }}" class="cat-pill {% if selected_category == cat %}active{% endif %}">{{ cat|capitalize }}</a>
+            {% endfor %}
+        </div>
         <button id="bulk-add-cart" class="btn-bulk">
-            <i class="fas fa-cart-plus me-2"></i>Ajouter la sélection au panier
+            <i class="fas fa-cart-plus me-1"></i> Ajouter la sélection
         </button>
     </div>
 </div>
@@ -58,12 +39,9 @@
 <!-- ===== RÉSULTATS DE RECHERCHE ===== -->
 {% if results is defined %}
 <div class="container">
-    <div class="section-header mb-3">
-        <div class="section-bar"></div>
-        <h2>Résultats pour "{{ query or selected_category }}"</h2>
-        {% if results %}
-        <span class="section-count">{{ results|length }} articles</span>
-        {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">Résultats pour "{{ query or selected_category }}"</h2>
+        {% if results %}<span class="badge bg-secondary">{{ results|length }} articles</span>{% endif %}
     </div>
 
     {% if results %}
@@ -72,11 +50,7 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card-futuristic h-100">
                 <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-
-                <!-- Badge catégorie -->
                 <div class="card-badge">{{ item.category|upper if item.category else 'ARTICLE' }}</div>
-
-                <!-- Image -->
                 {% if item.image_url %}
                 <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
                 {% else %}
@@ -85,21 +59,13 @@
                     <span>image</span>
                 </div>
                 {% endif %}
-
-                <!-- Corps -->
                 <div class="card-body-inner">
                     <div class="card-title-text">{{ item.title }}</div>
                     <div class="card-price-text">{{ item.price }} <small>Ar</small></div>
                     <p class="card-description">{{ item.description[:100] if item.description else '' }}...</p>
                     <div class="card-actions">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
-                           class="btn-voir track-click" data-id="{{ item.id }}">
-                            Voir détail
-                        </a>
-                        <button class="btn btn-like btn-sm btn-outline-danger"
-                                data-id="{{ item.id }}">
-                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                        </button>
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn-voir track-click" data-id="{{ item.id }}">Voir détail</a>
+                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span></button>
                     </div>
                 </div>
             </div>
@@ -107,14 +73,11 @@
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
     {% if pagination and pagination.pages > 1 %}
-    <nav class="mt-5" aria-label="Pagination">
+    <nav class="mt-4">
         <ul class="pagination justify-content-center">
             <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.prev_num }}">
-                    ← Précédent
-                </a>
+                <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.prev_num }}">← Précédent</a>
             </li>
             {% for p in range(1, pagination.pages + 1) %}
             <li class="page-item {% if p == pagination.page %}active{% endif %}">
@@ -122,41 +85,34 @@
             </li>
             {% endfor %}
             <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.next_num }}">
-                    Suivant →
-                </a>
+                <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.next_num }}">Suivant →</a>
             </li>
         </ul>
     </nav>
     {% endif %}
 
     {% else %}
-    <div class="alert alert-warning">
-        <i class="fas fa-search me-2"></i>Aucun résultat trouvé pour cette recherche.
-    </div>
+    <div class="alert alert-warning"><i class="fas fa-search me-2"></i>Aucun résultat trouvé.</div>
     {% endif %}
 </div>
 {% endif %}
 
 <!-- ===== RECOMMANDATIONS IA ===== -->
 {% if recommendations %}
-<div class="container">
+<div class="container mt-4">
     <hr class="section-divider">
-    <div class="section-header mb-2">
-        <div class="section-bar"></div>
-        <h2><i class="fas fa-robot me-2"></i>Recommandations IA</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0"><i class="fas fa-robot me-2"></i>Recommandations IA</h2>
     </div>
     {% if ai_insights and ai_insights.reason %}
-    <p class="mb-4" style="color:rgba(180,200,255,0.45);font-size:13px;">{{ ai_insights.reason }}</p>
+    <p class="text-muted small mb-3">{{ ai_insights.reason }}</p>
     {% endif %}
-
     <div class="row g-3">
         {% for item in recommendations %}
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card-futuristic h-100">
                 <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-                <div class="card-badge" style="background:rgba(123,143,255,0.12);border-color:rgba(123,143,255,0.3);color:#7b8fff;">IA</div>
-
+                <div class="card-badge" style="background:rgba(123,143,255,0.12); border-color:rgba(123,143,255,0.3); color:#7b8fff;">IA</div>
                 {% if item.image_url %}
                 <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
                 {% else %}
@@ -165,21 +121,12 @@
                     <span style="color:rgba(123,143,255,0.35);">recommandé</span>
                 </div>
                 {% endif %}
-
                 <div class="card-body-inner">
                     <div class="card-title-text">{{ item.title }}</div>
-                    <div class="card-price-text" style="color:#7b8fff;">
-                        {{ item.price }} <small style="color:rgba(123,143,255,0.5);">Ar</small>
-                    </div>
+                    <div class="card-price-text" style="color:#7b8fff;">{{ item.price }} <small style="color:rgba(123,143,255,0.5);">Ar</small></div>
                     <div class="card-actions">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
-                           class="btn-voir track-click" data-id="{{ item.id }}"
-                           style="border-color:rgba(123,143,255,0.3);color:#7b8fff;">
-                            Voir détail
-                        </a>
-                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">
-                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                        </button>
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn-voir track-click" data-id="{{ item.id }}" style="border-color:rgba(123,143,255,0.3); color:#7b8fff;">Voir détail</a>
+                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span></button>
                     </div>
                 </div>
             </div>
@@ -191,25 +138,18 @@
 
 <!-- ===== TENDANCES ===== -->
 {% if trending_items %}
-<div class="container">
+<div class="container mt-4">
     <hr class="section-divider">
-    <div class="section-header mb-3">
-        <div class="section-bar" style="background:linear-gradient(to bottom,#ff6040,transparent);"></div>
-        <h2><i class="fas fa-fire me-2" style="color:#ff6040;"></i>Tendances</h2>
-        <span class="section-count" style="background:rgba(255,96,64,0.08);border-color:rgba(255,96,64,0.2);color:#ff6040;">
-            {{ trending_items|length }} articles
-        </span>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0"><i class="fas fa-fire me-2" style="color:#ff6040;"></i>Tendances</h2>
+        <span class="badge bg-danger">{{ trending_items|length }} articles</span>
     </div>
-
     <div class="row g-3">
         {% for item in trending_items %}
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card-futuristic h-100" style="border-color:rgba(255,96,64,0.2)!important;">
                 <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-                <div class="card-badge" style="background:rgba(255,96,64,0.12);border-color:rgba(255,96,64,0.3);color:#ff6040;">
-                    🔥 TENDANCE
-                </div>
-
+                <div class="card-badge" style="background:rgba(255,96,64,0.12); border-color:rgba(255,96,64,0.3); color:#ff6040;">🔥 TENDANCE</div>
                 {% if item.image_url %}
                 <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
                 {% else %}
@@ -218,21 +158,12 @@
                     <span style="color:rgba(255,96,64,0.35);">tendance</span>
                 </div>
                 {% endif %}
-
                 <div class="card-body-inner">
                     <div class="card-title-text">{{ item.title }}</div>
-                    <div class="card-price-text" style="color:#ff8060;">
-                        {{ item.price }} <small style="color:rgba(255,96,64,0.5);">Ar</small>
-                    </div>
+                    <div class="card-price-text" style="color:#ff8060;">{{ item.price }} <small style="color:rgba(255,96,64,0.5);">Ar</small></div>
                     <div class="card-actions">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
-                           class="btn-voir track-click" data-id="{{ item.id }}"
-                           style="border-color:rgba(255,96,64,0.3);color:#ff8060;">
-                            Voir détail
-                        </a>
-                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">
-                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                        </button>
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn-voir track-click" data-id="{{ item.id }}" style="border-color:rgba(255,96,64,0.3); color:#ff8060;">Voir détail</a>
+                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span></button>
                     </div>
                 </div>
             </div>
@@ -242,24 +173,20 @@
 </div>
 {% endif %}
 
-<!-- ===== ARTICLES RÉCENTS (page d'accueil) ===== -->
+<!-- ===== ARTICLES RÉCENTS ===== -->
 {% if not results and not recommendations and featured %}
-<div class="container">
-    <div class="section-header mb-3">
-        <div class="section-bar"></div>
-        <h2>Articles récents</h2>
-        <span class="section-count">{{ featured|length }} articles</span>
+<div class="container mt-4">
+    <hr class="section-divider">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">Articles récents</h2>
+        <span class="badge bg-secondary">{{ featured|length }} articles</span>
     </div>
-
     <div class="row g-3">
         {% for item in featured %}
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card-futuristic h-100">
                 <input type="checkbox" class="bulk-checkbox" value="{{ item.id }}">
-                {% if item.category %}
-                <div class="card-badge">{{ item.category|upper }}</div>
-                {% endif %}
-
+                {% if item.category %}<div class="card-badge">{{ item.category|upper }}</div>{% endif %}
                 {% if item.image_url %}
                 <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
                 {% else %}
@@ -268,19 +195,13 @@
                     <span>pas d'image</span>
                 </div>
                 {% endif %}
-
                 <div class="card-body-inner">
                     <div class="card-title-text">{{ item.title }}</div>
                     <div class="card-price-text">{{ item.price }} <small>Ar</small></div>
                     <p class="card-description">{{ item.description[:100] if item.description else '' }}...</p>
                     <div class="card-actions">
-                        <a href="{{ url_for('main.track_click', item_id=item.id) }}"
-                           class="btn-voir track-click" data-id="{{ item.id }}">
-                            Voir détail
-                        </a>
-                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">
-                            ♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span>
-                        </button>
+                        <a href="{{ url_for('main.track_click', item_id=item.id) }}" class="btn-voir track-click" data-id="{{ item.id }}">Voir détail</a>
+                        <button class="btn btn-like btn-sm btn-outline-danger" data-id="{{ item.id }}">♡ <span class="like-count">{{ item.likes if item.likes is defined else 0 }}</span></button>
                     </div>
                 </div>
             </div>
@@ -290,11 +211,11 @@
 </div>
 {% endif %}
 
-<div style="height:3rem;"></div>
+<!-- Espace bas de page réduit -->
+<div style="height: 1rem;"></div>
 
-<!-- ===== SCRIPTS ===== -->
+<!-- Scripts (inchangés) -->
 <script>
-    /* --- Likes AJAX --- */
     document.querySelectorAll('.btn-like').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -316,17 +237,12 @@
         });
     });
 
-    /* --- Ajout groupé au panier --- */
     document.getElementById('bulk-add-cart').addEventListener('click', function() {
-        const selected = Array.from(
-            document.querySelectorAll('.bulk-checkbox:checked')
-        ).map(cb => cb.value);
-
+        const selected = Array.from(document.querySelectorAll('.bulk-checkbox:checked')).map(cb => cb.value);
         if (selected.length === 0) {
             alert('Veuillez sélectionner au moins un article.');
             return;
         }
-
         fetch('/add-bulk-to-cart', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -336,8 +252,7 @@
         .then(data => {
             if (data.success) {
                 alert(`${selected.length} article(s) ajouté(s) au panier.`);
-                document.querySelectorAll('.bulk-checkbox:checked')
-                    .forEach(cb => cb.checked = false);
+                document.querySelectorAll('.bulk-checkbox:checked').forEach(cb => cb.checked = false);
                 location.reload();
             } else {
                 alert("Erreur lors de l'ajout au panier.");

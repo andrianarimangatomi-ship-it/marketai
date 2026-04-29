@@ -7,8 +7,11 @@ from app.similarite import get_similar_items, refresh_similarity
 from app.tags_ia import generate_tags_for_item
 from werkzeug.utils import secure_filename
 from sklearn.metrics.pairwise import cosine_similarity
+from datetime import datetime, timedelta
+from sqlalchemy import func
 import cloudinary
 import cloudinary.uploader
+import google.generativeai as genai
 import numpy as np
 import os
 import uuid
@@ -23,6 +26,9 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     secure=True
 )
+
+# ---------- Configuration Gemini ----------
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # ---------- Recherche sémantique ----------
 def semantic_search(query, limit=12):
@@ -46,11 +52,39 @@ def semantic_search(query, limit=12):
 @main.route('/test-cloudinary')
 def test_cloudinary():
     try:
-        # Test avec une image publique connue
         result = cloudinary.uploader.upload("https://res.cloudinary.com/demo/image/upload/sample.jpg", folder="marketai_test")
         return f"Succès : {result['secure_url']}"
     except Exception as e:
         return f"Erreur : {repr(e)}"
+
+# ---------- Chatbot IA ----------
+@main.route('/chatbot', methods=['POST'])
+def chatbot():
+    data = request.get_json()
+    user_message = data.get('message', '').strip()
+    if not user_message:
+        return jsonify({'reply': "Bonjour ! Posez-moi une question sur nos produits."})
+    
+    try:
+        # Récupérer les produits récents pour contexte
+        products = Item.query.order_by(Item.created_at.desc()).limit(20).all()
+        product_info = "\n".join([f"- {p.title} : {p.description[:100]}... (prix: {p.price} Ar, likes: {p.likes})" for p in products])
+        
+        prompt = f"""Tu es un assistant shopping pour le site MarketAI (vente à Madagascar).
+Voici quelques produits disponibles :
+{product_info}
+
+L'utilisateur demande : {user_message}
+Réponds de manière utile, précise et courte (max 2 phrases). Si la question ne concerne pas les produits de la liste, dis poliment que tu ne peux pas répondre."""
+        
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        reply = response.text.strip()
+    except Exception as e:
+        print(f"Erreur Gemini: {e}")
+        reply = "Désolé, je rencontre un problème technique. Veuillez réessayer plus tard."
+    
+    return jsonify({'reply': reply})
 
 # ---------- Public ----------
 @main.route('/')
@@ -321,7 +355,31 @@ def admin_dashboard():
     pagination = items_query.order_by(Item.created_at.desc()).paginate(page=page, per_page=10, error_out=False)
     items = pagination.items
     admin_metrics = get_global_metrics()
-    return render_template('admin_dashboard.html', items=items, pagination=pagination, query=query, categories=categories, selected_category=category, admin_metrics=admin_metrics)
+
+    # --- Statistiques commandes ---
+    recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
+    pending_orders_count = Order.query.filter(Order.status == 'paid').count()
+    
+    today = datetime.utcnow().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    start_of_month = today.replace(day=1)
+    
+    ca_today = db.session.query(func.sum(Order.total_price)).filter(func.date(Order.created_at) == today).scalar() or 0
+    ca_week = db.session.query(func.sum(Order.total_price)).filter(Order.created_at >= start_of_week).scalar() or 0
+    ca_month = db.session.query(func.sum(Order.total_price)).filter(Order.created_at >= start_of_month).scalar() or 0
+
+    return render_template('admin_dashboard.html',
+                           items=items,
+                           pagination=pagination,
+                           query=query,
+                           categories=categories,
+                           selected_category=category,
+                           admin_metrics=admin_metrics,
+                           recent_orders=recent_orders,
+                           pending_orders_count=pending_orders_count,
+                           ca_today=float(ca_today),
+                           ca_week=float(ca_week),
+                           ca_month=float(ca_month))
 
 def save_image_file(image):
     """Upload l'image sur Cloudinary et retourne l'URL sécurisée."""

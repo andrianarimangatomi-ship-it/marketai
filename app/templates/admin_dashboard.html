@@ -1,112 +1,429 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Gestion des articles</h2>
+
+<style>
+.adm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 200, 255, 0.1);
+}
+.adm-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #00c8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.adm-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 1.5rem;
+}
+.adm-metric {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0, 200, 255, 0.1);
+    border-radius: 14px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+}
+.adm-metric::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+}
+.adm-metric.cyan::before  { background: #00c8ff; }
+.adm-metric.purple::before { background: #7b8fff; }
+.adm-metric.orange::before { background: #ff9040; }
+.adm-metric.green::before  { background: #3ee89a; }
+.adm-metric-label {
+    font-size: 11px;
+    color: rgba(180, 200, 255, 0.45);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+.adm-metric-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.adm-metric.cyan   .adm-metric-value { color: #00c8ff; }
+.adm-metric.purple .adm-metric-value { color: #7b8fff; }
+.adm-metric.orange .adm-metric-value { color: #ff9040; }
+.adm-metric.green  .adm-metric-value { color: #3ee89a; }
+
+.adm-cards-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+}
+.adm-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(0, 200, 255, 0.1);
+    border-radius: 14px;
+    padding: 16px 18px;
+}
+.adm-card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(0, 200, 255, 0.6);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.adm-card-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: linear-gradient(to bottom, #00c8ff, transparent);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.adm-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 13px;
+}
+.adm-list-item:last-child { border-bottom: none; }
+.adm-list-name { color: #e8f0ff; font-weight: 500; }
+.adm-list-stat { color: rgba(0, 200, 255, 0.6); font-size: 11px; }
+.adm-list-score { color: #3ee89a; font-size: 12px; font-weight: 500; }
+
+.adm-search-bar {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(0, 200, 255, 0.1);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 1.5rem;
+}
+.adm-search-bar .row { align-items: flex-end; }
+
+.adm-table-wrap {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(0, 200, 255, 0.1);
+    border-radius: 14px;
+    overflow: hidden;
+}
+.adm-table-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(0, 200, 255, 0.08);
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(0, 200, 255, 0.6);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.adm-table-header::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: linear-gradient(to bottom, #00c8ff, transparent);
+    border-radius: 2px;
+}
+.table-dark {
+    margin: 0 !important;
+    font-size: 13px;
+}
+.table-dark thead tr {
+    background: rgba(0, 200, 255, 0.05) !important;
+    border-bottom: 1px solid rgba(0, 200, 255, 0.12);
+}
+.table-dark thead th {
+    color: rgba(0, 200, 255, 0.65) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+    padding: 12px 14px !important;
+    border: none !important;
+    background: transparent !important;
+}
+.table-dark tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+    background: transparent !important;
+    transition: background 0.15s;
+}
+.table-dark tbody tr:hover {
+    background: rgba(0, 200, 255, 0.03) !important;
+}
+.table-dark tbody tr:last-child {
+    border-bottom: none !important;
+}
+.table-dark td {
+    color: #e8f0ff !important;
+    padding: 12px 14px !important;
+    border: none !important;
+    vertical-align: middle !important;
+    background: transparent !important;
+}
+.table-dark.table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(255,255,255,0.01) !important;
+}
+
+.adm-id { color: rgba(180, 200, 255, 0.35) !important; font-size: 12px !important; }
+.adm-price { color: #00c8ff !important; font-family: 'Orbitron', monospace; font-size: 12px !important; }
+.adm-views { color: rgba(180, 200, 255, 0.7) !important; }
+.adm-score-val { color: #3ee89a !important; font-size: 12px !important; }
+
+.badge-cat {
+    display: inline-block;
+    background: rgba(0, 200, 255, 0.1);
+    border: 1px solid rgba(0, 200, 255, 0.25);
+    color: #00c8ff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+.badge-cat.voitures  { background: rgba(255,144,64,0.1); border-color: rgba(255,144,64,0.25); color: #ff9040; }
+.badge-cat.motos     { background: rgba(255,144,64,0.1); border-color: rgba(255,144,64,0.25); color: #ff9040; }
+.badge-cat.guitares  { background: rgba(0,200,255,0.1);  border-color: rgba(0,200,255,0.25);  color: #00c8ff; }
+.badge-cat.vêtements { background: rgba(123,143,255,0.1);border-color: rgba(123,143,255,0.25);color: #7b8fff; }
+.badge-cat.autres    { background: rgba(62,232,154,0.1); border-color: rgba(62,232,154,0.25); color: #3ee89a; }
+
+.btn-adm-edit {
+    background: rgba(0, 200, 255, 0.08);
+    border: 1px solid rgba(0, 200, 255, 0.25);
+    color: #00c8ff;
+    border-radius: 7px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-adm-edit:hover {
+    background: rgba(0, 200, 255, 0.16);
+    color: #00c8ff;
+    border-color: #00c8ff;
+}
+.btn-adm-del {
+    background: rgba(255, 80, 60, 0.08);
+    border: 1px solid rgba(255, 80, 60, 0.25);
+    color: #ff6050;
+    border-radius: 7px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.btn-adm-del:hover {
+    background: rgba(255, 80, 60, 0.16);
+    border-color: #ff6050;
+    color: #ff6050;
+}
+
+@media (max-width: 768px) {
+    .adm-metrics { grid-template-columns: repeat(2, 1fr); }
+    .adm-cards-row { grid-template-columns: 1fr; }
+}
+</style>
+
+<!-- Header -->
+<div class="adm-header">
+    <div class="adm-title">ADMIN — MarketAI</div>
     <a href="{{ url_for('admin.new_item') }}" class="btn btn-glow">+ Nouvel article</a>
 </div>
-<form action="{{ url_for('admin.admin_dashboard') }}" method="get" class="row g-2 mb-4 align-items-end">
-    <div class="col-md-5">
-        <label class="form-label text-white">Rechercher</label>
-        <input type="text" name="q" class="form-control" placeholder="Titre, description..." value="{{ query or '' }}">
+
+<!-- Métriques -->
+<div class="adm-metrics">
+    <div class="adm-metric cyan">
+        <div class="adm-metric-label">TOTAL ARTICLES</div>
+        <div class="adm-metric-value">{{ admin_metrics.total_items }}</div>
     </div>
-    <div class="col-md-4">
-        <label class="form-label text-white">Catégorie</label>
-        <select name="category" class="form-select">
-            <option value="tous">Toutes catégories</option>
-            {% for cat in categories %}
-            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat|capitalize }}</option>
-            {% endfor %}
-        </select>
+    <div class="adm-metric purple">
+        <div class="adm-metric-label">TOTAL VUES</div>
+        <div class="adm-metric-value">{{ admin_metrics.total_views }}</div>
     </div>
-    <div class="col-md-3">
-        <button type="submit" class="btn btn-glow w-100">Rechercher</button>
+    <div class="adm-metric orange">
+        <div class="adm-metric-label">TOTAL CLICS</div>
+        <div class="adm-metric-value">{{ admin_metrics.total_clicks }}</div>
     </div>
-</form>
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card bg-dark text-white p-3 h-100">
-            <h5>Total articles</h5>
-            <p class="fs-3 mb-0">{{ admin_metrics.total_items }}</p>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-dark text-white p-3 h-100">
-            <h5>Total vues</h5>
-            <p class="fs-3 mb-0">{{ admin_metrics.total_views }}</p>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-dark text-white p-3 h-100">
-            <h5>Total clics</h5>
-            <p class="fs-3 mb-0">{{ admin_metrics.total_clicks }}</p>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-dark text-white p-3 h-100">
-            <h5>CTR moyen</h5>
-            <p class="fs-3 mb-0">{{ "%.0f"|format(admin_metrics.avg_ctr * 100) }}%</p>
-        </div>
+    <div class="adm-metric green">
+        <div class="adm-metric-label">CTR MOYEN</div>
+        <div class="adm-metric-value">{{ "%.0f"|format(admin_metrics.avg_ctr * 100) }}%</div>
     </div>
 </div>
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <div class="card bg-dark text-white p-3 h-100">
-            <h5>Catégories IA les plus performantes</h5>
-            <ul class="list-unstyled mb-0">
-                {% for metric in admin_metrics.top_categories %}
-                <li>{{ metric.category|capitalize }} — {{ metric.views }} vues, {{ metric.clicks }} clics, CTR {{ "%.0f"|format(metric.ctr * 100) }}%</li>
-                {% endfor %}
-            </ul>
-        </div>
+
+<!-- Bloc Commandes (ajout) -->
+<div class="adm-cards-row">
+    <div class="adm-card">
+        <div class="adm-card-title">📦 DERNIÈRES COMMANDES</div>
+        {% if recent_orders %}
+            <div style="overflow-x: auto;">
+                <table style="width:100%; font-size:12px; border-collapse: collapse;">
+                    <thead>
+                        <tr><th>ID</th><th>Client</th><th>Montant</th><th>Statut</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for order in recent_orders %}
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.customer_name }}</td>
+                            <td>{{ order.total_price }} Ar</td>
+                            <td>{% if order.status == 'paid' %}⏳ En attente{% elif order.status == 'shipped' %}📦 Expédiée{% else %}✅ Traitée{% endif %}</td>
+                            <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2 text-end"><a href="{{ url_for('admin.admin_orders') }}" style="color:#00c8ff;">Voir toutes →</a></div>
+        {% else %}
+            <div class="adm-list-item">Aucune commande pour le moment.</div>
+        {% endif %}
     </div>
-    <div class="col-md-6">
-        <div class="card bg-dark text-white p-3 h-100">
-            <h5>Top articles IA</h5>
-            <ul class="list-unstyled mb-0">
-                {% for item in admin_metrics.top_items %}
-                <li>{{ item.title }} — {{ item.category|capitalize }} — score IA {{ "%.2f"|format(item.reinforcement_score()) }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+    <div class="adm-card">
+        <div class="adm-card-title">💰 CHIFFRE D'AFFAIRES</div>
+        <div class="adm-list-item"><span class="adm-list-name">Aujourd'hui</span><span class="adm-list-score">{{ ca_today }} Ar</span></div>
+        <div class="adm-list-item"><span class="adm-list-name">Cette semaine</span><span class="adm-list-score">{{ ca_week }} Ar</span></div>
+        <div class="adm-list-item"><span class="adm-list-name">Ce mois</span><span class="adm-list-score">{{ ca_month }} Ar</span></div>
+        <div class="adm-list-item mt-2"><span class="adm-list-name">Commandes en attente</span><span class="adm-list-score">{{ pending_orders_count }}</span></div>
     </div>
 </div>
-<table class="table table-dark table-striped">
-    <thead>
-        <tr><th>ID</th><th>Titre</th><th>Catégorie</th><th>Prix</th><th>Vues</th><th>Clics</th><th>Score</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-        {% for item in items %}
-        <tr>
-            <td>{{ item.id }}</td>
-            <td>{{ item.title }}</td>
-            <td>{{ item.category }}</td>
-            <td>{{ item.price }} Ar</td>
-            <td>{{ item.views }}</td>
-            <td>{{ item.clicks }}</td>
-            <td>{{ "%.2f"|format(item.score_popularite()) }}</td>
-            <td>
-                <a href="{{ url_for('admin.edit_item', item_id=item.id) }}" class="btn btn-sm btn-outline-info">Modifier</a>
-                <form method="POST" action="{{ url_for('admin.delete_item', item_id=item.id) }}" style="display:inline;">
-                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ?')">Supprimer</button>
-                </form>
-            </td>
-        </tr>
+
+<!-- Top catégories + Top articles IA -->
+<div class="adm-cards-row">
+    <div class="adm-card">
+        <div class="adm-card-title">CATÉGORIES LES PLUS PERFORMANTES</div>
+        {% for metric in admin_metrics.top_categories %}
+        <div class="adm-list-item">
+            <span class="adm-list-name">{{ metric.category|capitalize }}</span>
+            <span class="adm-list-stat">
+                {{ metric.views }} vues &nbsp;·&nbsp; {{ metric.clicks }} clics &nbsp;·&nbsp; CTR {{ "%.0f"|format(metric.ctr * 100) }}%
+            </span>
+        </div>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+    <div class="adm-card">
+        <div class="adm-card-title">TOP ARTICLES IA</div>
+        {% for item in admin_metrics.top_items %}
+        <div class="adm-list-item">
+            <span class="adm-list-name">{{ item.title }}</span>
+            <span class="adm-list-score">score IA {{ "%.2f"|format(item.reinforcement_score()) }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Barre de recherche -->
+<div class="adm-search-bar">
+    <form action="{{ url_for('admin.admin_dashboard') }}" method="get" class="row g-2">
+        <div class="col-md-5">
+            <label class="form-label" style="font-size:12px;color:rgba(180,200,255,0.5);letter-spacing:0.5px;">RECHERCHER</label>
+            <input type="text" name="q" class="form-control"
+                   placeholder="Titre, description..."
+                   value="{{ query or '' }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" style="font-size:12px;color:rgba(180,200,255,0.5);letter-spacing:0.5px;">CATÉGORIE</label>
+            <select name="category" class="form-select">
+                <option value="tous">Toutes catégories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+                    {{ cat|capitalize }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-glow w-100">Rechercher</button>
+        </div>
+    </form>
+</div>
+
+<!-- Tableau articles -->
+<div class="adm-table-wrap">
+    <div class="adm-table-header">LISTE DES ARTICLES</div>
+    <table class="table table-dark table-striped mb-0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>TITRE</th>
+                <th>CATÉGORIE</th>
+                <th>PRIX</th>
+                <th>VUES</th>
+                <th>CLICS</th>
+                <th>SCORE</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="adm-id">#{{ item.id }}</td>
+                <td>{{ item.title }}</td>
+                <td>
+                    <span class="badge-cat {{ item.category|lower if item.category else '' }}">
+                        {{ item.category|upper if item.category else '—' }}
+                    </span>
+                </td>
+                <td class="adm-price">{{ item.price }} Ar</td>
+                <td class="adm-views">{{ item.views }}</td>
+                <td class="adm-views">{{ item.clicks }}</td>
+                <td class="adm-score-val">{{ "%.2f"|format(item.score_popularite()) }}</td>
+                <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <a href="{{ url_for('admin.edit_item', item_id=item.id) }}"
+                           class="btn-adm-edit">Modifier</a>
+                        <form method="POST"
+                              action="{{ url_for('admin.delete_item', item_id=item.id) }}"
+                              style="display:inline;">
+                            <button type="submit" class="btn-adm-del"
+                                    onclick="return confirm('Supprimer cet article ?')">
+                                Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
 {% if pagination.pages > 1 %}
-<nav aria-label="Pagination admin">
+<nav class="mt-4" aria-label="Pagination admin">
     <ul class="pagination justify-content-center">
         <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-            <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.prev_num }}">Précédent</a>
+            <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.prev_num }}">
+                ← Précédent
+            </a>
         </li>
         {% for p in range(1, pagination.pages + 1) %}
-        <li class="page-item {% if p == pagination.page %}active{% endif %}"><a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ p }}">{{ p }}</a></li>
+        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+            <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ p }}">{{ p }}</a>
+        </li>
         {% endfor %}
         <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-            <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.next_num }}">Suivant</a>
+            <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&page={{ pagination.next_num }}">
+                Suivant →
+            </a>
         </li>
     </ul>
 </nav>
 {% endif %}
+
 {% endblock %}

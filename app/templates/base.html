@@ -21,7 +21,6 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">Accueil</a></li>
-                    <!-- Nouveau lien vers le panier avec compteur -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.view_cart') }}">
                             <i class="fas fa-shopping-cart"></i> Panier
@@ -53,5 +52,77 @@
     <footer class="text-center py-4"><p>MarketAI © 2026 - Vente eto Madagasikara</p></footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Chatbot flottant -->
+    <div id="chatbot-toggle" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <button id="chatbot-btn" style="background:#00c8ff; border:none; border-radius: 50%; width: 55px; height: 55px; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">💬</button>
+    </div>
+    <div id="chatbot-window" style="display: none; position: fixed; bottom: 85px; right: 20px; width: 300px; background: #0a0f1a; border: 1px solid #00c8ff; border-radius: 12px; z-index: 1000; flex-direction: column; overflow: hidden;">
+        <div style="background: #001a24; padding: 10px; color: #00c8ff; font-weight: bold; display: flex; justify-content: space-between;">
+            <span>🤖 Assistant MarketAI</span>
+            <span id="chatbot-close" style="cursor:pointer;">✖</span>
+        </div>
+        <div id="chatbot-messages" style="height: 250px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: #1e2a3a; padding: 8px; border-radius: 8px; align-self: flex-start;">Bonjour ! Je peux vous aider à trouver un produit. Que cherchez-vous ?</div>
+        </div>
+        <div style="display: flex; border-top: 1px solid #2a3a4a;">
+            <input type="text" id="chatbot-input" placeholder="Votre question..." style="flex:1; background: #0a0f1a; border: none; padding: 10px; color: white;">
+            <button id="chatbot-send" style="background: #00c8ff; border: none; padding: 0 15px; cursor: pointer;">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const toggleBtn = document.getElementById('chatbot-btn');
+        const windowDiv = document.getElementById('chatbot-window');
+        const closeBtn = document.getElementById('chatbot-close');
+        const sendBtn = document.getElementById('chatbot-send');
+        const input = document.getElementById('chatbot-input');
+        const messagesDiv = document.getElementById('chatbot-messages');
+
+        toggleBtn.addEventListener('click', () => {
+            if (windowDiv.style.display === 'none' || windowDiv.style.display === '') {
+                windowDiv.style.display = 'flex';
+            } else {
+                windowDiv.style.display = 'none';
+            }
+        });
+        closeBtn.addEventListener('click', () => windowDiv.style.display = 'none');
+        
+        function addMessage(text, isUser) {
+            const msg = document.createElement('div');
+            msg.style.background = isUser ? '#00c8ff20' : '#1e2a3a';
+            msg.style.padding = '8px';
+            msg.style.borderRadius = '8px';
+            msg.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
+            msg.style.maxWidth = '80%';
+            msg.innerText = text;
+            messagesDiv.appendChild(msg);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = input.value.trim();
+            if (!message) return;
+            addMessage(message, true);
+            input.value = '';
+            addMessage("🤔 Réflexion...", false);
+            try {
+                const resp = await fetch('/chatbot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message})
+                });
+                const data = await resp.json();
+                messagesDiv.removeChild(messagesDiv.lastChild);
+                addMessage(data.reply, false);
+            } catch (err) {
+                messagesDiv.removeChild(messagesDiv.lastChild);
+                addMessage("Erreur, veuillez réessayer.", false);
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+    </script>
 </body>
 </html>

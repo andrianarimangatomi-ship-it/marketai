@@ -7,12 +7,22 @@ from app.similarite import get_similar_items, refresh_similarity
 from app.tags_ia import generate_tags_for_item
 from werkzeug.utils import secure_filename
 from sklearn.metrics.pairwise import cosine_similarity
+import cloudinary
+import cloudinary.uploader
 import numpy as np
 import os
 import uuid
 
 main = Blueprint('main', __name__)
 admin = Blueprint('admin', __name__)
+
+# ---------- Configuration Cloudinary ----------
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+    secure=True
+)
 
 # ---------- Recherche sémantique ----------
 def semantic_search(query, limit=12):
@@ -48,7 +58,6 @@ def search():
     page = request.args.get('page', 1, type=int)
 
     semantic_search_used = False
-    # Recherche sémantique si requête texte sans catégorie spécifique
     if query and (not category or category == 'tous'):
         results = semantic_search(query, limit=12)
         pagination = None
@@ -62,7 +71,6 @@ def search():
         pagination = items_query.order_by(Item.created_at.desc()).paginate(page=page, per_page=8, error_out=False)
         results = pagination.items
 
-    # Historique de recherche
     if 'search_history' not in session:
         session['search_history'] = []
     if category and category != 'tous':
@@ -306,13 +314,15 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', items=items, pagination=pagination, query=query, categories=categories, selected_category=category, admin_metrics=admin_metrics)
 
 def save_image_file(image):
+    """Upload l'image sur Cloudinary et retourne l'URL sécurisée."""
     if image and image.filename:
-        filename = secure_filename(image.filename)
-        if filename:
-            filename = f"{uuid.uuid4().hex}_{filename}"
-            save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            image.save(save_path)
-            return f"/static/uploads/{filename}"
+        try:
+            upload_result = cloudinary.uploader.upload(image, folder="marketai")
+            return upload_result['secure_url']
+        except Exception as e:
+            print(f"Erreur Cloudinary: {e}")
+            flash("Erreur lors de l'upload de l'image. Vérifiez vos clés Cloudinary.", "danger")
+            return None
     return None
 
 @admin.route('/admin/item/new', methods=['GET', 'POST'])
